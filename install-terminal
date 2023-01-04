@@ -1,18 +1,8 @@
-#!/usr/bin/env bash
-
-DOTFILES=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-
-rm -rf $HOME/.config/kitty
-ln -s $DOTFILES/kitty $HOME/.config/kitty
-
-rm -rf $HOME/.fonts
-cd $DOTFILES/fonts
-unzip "*.zip" "*.ttf" "*.otf" -d $HOME/.fonts
-rm -rf $DOTFILES/fonts/*/
-
 # Install and configure Kitty terminal emulator
-curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
 sudo rm -f /usr/local/bin/kitty
+rm -rf $HOME/.config/kitty # install config adds this file
+rm -rf $HOME/.local/kitty.app
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
 sudo ln -s $HOME/.local/kitty.app/bin/kitty /usr/local/bin/kitty
 cp $HOME/.local/kitty.app/share/applications/kitty.desktop $HOME/.local/share/applications/
 # If you want to open text files and images in kitty via your file manager also add the kitty-open.desktop file
