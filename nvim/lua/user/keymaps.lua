@@ -36,3 +36,9 @@ vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
 -- These don't work for some reason
 --vim.keymap.set('v', '<A-j>', ':move >+1<CR>gv=gv')
 --vim.keymap.set('v', '<A-k>', ':move <-2<CR>gv=gv')
+
+-- Resize with arrow keys
+vim.keymap.set('n', '<C-Up>', ':resize +2<CR>')
+vim.keymap.set('n', '<C-Down>', ':resize -2<CR>')
+vim.keymap.set('n', '<C-Left>', ':vertical resize -2<CR>')
+vim.keymap.set('n', '<C-Right>', ':vertical resize +2<CR>')
