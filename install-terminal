@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Install and configure Kitty terminal emulator
 sudo rm -f /usr/local/bin/kitty
 rm -rf $HOME/.config/kitty # install config adds this file

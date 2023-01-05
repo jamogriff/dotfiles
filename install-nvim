@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+sudo rm -f /usr/local/bin/nvim
+rm -f $HOME/.local/nvim.appimage
+cd $HOME/.local
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+chmod u+x $HOME/.local/nvim.appimage
+sudo ln -s $HOME/.local/nvim.appimage /usr/local/bin/nvim
