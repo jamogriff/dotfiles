@@ -206,40 +206,39 @@ use({
     require('user.plugins.lspconfig')
   end,
 })
--- TODO both of these are used for auto-completion
--- use({
---   'L3MON4D3/LuaSnip',
---   config = function()
---     require('user.plugins.luasnip')
---   end,
--- })
-
--- use({
---   'hrsh7th/nvim-cmp',
---   requires = {
---     'L3MON4D3/LuaSnip',
---     'hrsh7th/cmp-buffer',
---     'hrsh7th/cmp-cmdline',
---     'hrsh7th/cmp-nvim-lsp',
---     'hrsh7th/cmp-nvim-lsp-signature-help',
---     'hrsh7th/cmp-nvim-lua',
---     'jessarcher/cmp-path',
---     'onsails/lspkind-nvim',
---     'saadparwaiz1/cmp_luasnip',
---   },
---   config = function()
---     require('user.plugins.cmp')
---   end,
--- })
 use({
-  'phpactor/phpactor',
-  branch = 'master',
-  ft = 'php',
-  run = 'composer install --no-dev -o',
-  -- config = function()
-  --   require('user.plugins.phpactor')
-  -- end,
+  'L3MON4D3/LuaSnip',
+  config = function()
+    require('user.plugins.luasnip')
+  end,
 })
+use({
+  'hrsh7th/nvim-cmp',
+  requires = {
+    'L3MON4D3/LuaSnip',
+    'hrsh7th/cmp-buffer',
+    'hrsh7th/cmp-cmdline',
+    'hrsh7th/cmp-nvim-lsp',
+    'hrsh7th/cmp-nvim-lsp-signature-help',
+    'hrsh7th/cmp-nvim-lua',
+    'jessarcher/cmp-path',
+    'onsails/lspkind-nvim',
+    'saadparwaiz1/cmp_luasnip',
+  },
+  config = function()
+    require('user.plugins.cmp')
+  end,
+})
+--  Not dealing with this right now since Intelephense is working great as an LSP server
+-- use({
+--   'phpactor/phpactor',
+--   branch = 'master',
+--   ft = 'php',
+--   run = 'composer install --no-dev -o',
+--   -- config = function()
+--   --   require('user.plugins.phpactor')
+--   -- end,
+-- })
 
 -- Rename in a popup window
 use({
