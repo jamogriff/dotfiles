@@ -156,13 +156,14 @@ use({
   'nvim-telescope/telescope.nvim',
   requires = {
     { 'nvim-lua/plenary.nvim' },
+    { 'BurntSushi/ripgrep'},
     { 'kyazdani42/nvim-web-devicons' },
     { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make' },
     { 'nvim-telescope/telescope-live-grep-args.nvim' },
   },
-  -- config = function()
-  --   require('user.plugins.telescope')
-  -- end,
+  config = function()
+    require('user.plugins.telescope')
+  end,
 })
 -- TODO Someday get into this
 -- use({
@@ -201,9 +202,9 @@ use({
   requires = {
     'folke/lsp-colors.nvim',
   },
-  -- config = function()
-  --   require('user.plugins.lspconfig')
-  -- end,
+  config = function()
+    require('user.plugins.lspconfig')
+  end,
 })
 -- TODO both of these are used for auto-completion
 -- use({
