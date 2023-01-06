@@ -22,3 +22,11 @@ ln -s $DOTFILES/nvim $HOME/.config/nvim
 
 # Switch Escape and Caps Lock
 gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"
+
+# Handle uncommitted secrets file
+if [ -f $DOTFILES/.secrets ]; then
+    rm -f $HOME/.local/.secrets
+    ln -s $DOTFILES/.secrets $HOME/.local/.secrets
+else
+    echo 'WARNING: Add .secrets file in directory to properly set env vars'
+fi

@@ -11,4 +11,8 @@ To run the install script you must have the following installed on a Linux compu
 - curl
 - unzip
 - fzf
+- ripgrep
+
+## TODO
+Symlink `default-packages` to $NVM_DIR in install script so global packages (mostly language servers) can be used on different versions of Node.
 
