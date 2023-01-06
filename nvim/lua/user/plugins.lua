@@ -127,9 +127,9 @@ use({
 use({
   'nvim-lualine/lualine.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
-  -- config = function()
-  --   require('user.plugins.lualine')
-  -- end,
+  config = function()
+    require('user.plugins.lualine')
+  end,
 })
 use({
   'kyazdani42/nvim-tree.lua',
