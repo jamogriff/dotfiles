@@ -34,23 +34,24 @@ use({
   config = function()
     vim.cmd('colorscheme kanagawa')
 
+    -- TODO not sure what the overrides below are doing honestly...
     -- Hide the characters in FloatBorder
-    -- vim.api.nvim_set_hl(0, 'FloatBorder', {
-    --   fg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
-    --   bg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
-    -- })
+    vim.api.nvim_set_hl(0, 'FloatBorder', {
+      fg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
+      bg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
+    })
 
     -- -- Make the StatusLineNonText background the same as StatusLine
-    -- vim.api.nvim_set_hl(0, 'StatusLineNonText', {
-    --   fg = vim.api.nvim_get_hl_by_name('NonText', true).foreground,
-    --   bg = vim.api.nvim_get_hl_by_name('StatusLine', true).background,
-    -- })
+    vim.api.nvim_set_hl(0, 'StatusLineNonText', {
+      fg = vim.api.nvim_get_hl_by_name('NonText', true).foreground,
+      bg = vim.api.nvim_get_hl_by_name('StatusLine', true).background,
+    })
 
     -- -- Hide the characters in CursorLineBg
-    -- vim.api.nvim_set_hl(0, 'CursorLineBg', {
-    --   fg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
-    --   bg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
-    -- })
+    vim.api.nvim_set_hl(0, 'CursorLineBg', {
+      fg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
+      bg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
+    })
 
     -- vim.api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#30323E' })
     -- vim.api.nvim_set_hl(0, 'IndentBlanklineChar', { fg = '#2F313C' })
@@ -88,7 +89,12 @@ use({
     require('nvim-autopairs').setup()
   end,
 })
-use('karb94/neoscroll.nvim')
+use({
+  'karb94/neoscroll.nvim',
+  config = function()
+    require('neoscroll').setup()
+  end,
+  })
 use({
   'famiu/bufdelete.nvim',
   config = function()
@@ -106,17 +112,17 @@ use({
 use('sickill/vim-pasta')
 use({
   'lukas-reineke/indent-blankline.nvim',
-  -- config = function()
-  --   require('user.plugins.indent-blankline')
-  -- end,
+  config = function()
+    require('user.plugins.indent-blankline')
+  end,
 })
 use({
   'akinsho/bufferline.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
   after = 'kanagawa.nvim',
-  -- config = function()
-  --   require('user.plugins.bufferline')
-  -- end,
+  config = function()
+    require('user.plugins.bufferline')
+  end,
 })
 use({
   'nvim-lualine/lualine.nvim',
@@ -261,9 +267,9 @@ use({
 -- })
 use({
   'glepnir/dashboard-nvim',
-  -- config = function()
-  --   require('user.plugins.dashboard')
-  -- end,
+  config = function()
+    require('user.plugins.dashboard')
+  end,
 })
 -- Automatically install plugins on initial run
 if packer_bootstrap then
