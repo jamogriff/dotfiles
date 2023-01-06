@@ -6,8 +6,8 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    items=`find ~/Code/zing/projects -maxdepth 2 -mindepth 1 -type d`
-    items+=`echo -e "\n/Code"`
+    items=`find ~/Code -maxdepth 3 -mindepth 1 -type d`
+    # items+=`echo -e "\n~/Code"`
     selected=`echo "$items" | fzf`
 fi
 

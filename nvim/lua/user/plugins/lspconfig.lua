@@ -46,17 +46,21 @@ local on_attach = function(_, bufnr)
   -- vim.keymap.set('n', '<leader>so', [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>]], { buffer = bufnr })
 end
 
--- TODO not setup yet nvim-cmp supports additional completion capabilities
---local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
 
 require('lspconfig').intelephense.setup({
-  before_init = function(init_options, config)
-    init_options.licenceKey = os.getenv('INTELEPHENSE_LICENSE')
-  end,
+  init_options = {
+    licenceKey = os.getenv('INTELEPHENSE_LICENSE')
+  },
   on_attach = function(client, bufnr)
     on_attach(client, bufnr)
     client.server_capabilities.documentFormattingProvider = false
     client.server_capabilities.documentRangeFormattingProvider = false
   end,
-  --capabilities = capabilities,
+  capabilities = capabilities,
 })
+
+vim.fn.sign_define('DiagnosticSignError', { text = '', texthl = 'DiagnosticSignError' })
+vim.fn.sign_define('DiagnosticSignWarn', { text = '', texthl = 'DiagnosticSignWarn' })
+vim.fn.sign_define('DiagnosticSignInfo', { text = '', texthl = 'DiagnosticSignInfo' })
+vim.fn.sign_define('DiagnosticSignHint', { text = '', texthl = 'DiagnosticSignHint' })
