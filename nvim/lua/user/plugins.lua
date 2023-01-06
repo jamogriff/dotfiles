@@ -53,8 +53,8 @@ use({
       bg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
     })
 
-    -- vim.api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#30323E' })
-    -- vim.api.nvim_set_hl(0, 'IndentBlanklineChar', { fg = '#2F313C' })
+    vim.api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#30323E' })
+    vim.api.nvim_set_hl(0, 'IndentBlanklineChar', { fg = '#2F313C' })
   end,
 })
 
@@ -134,24 +134,22 @@ use({
 use({
   'kyazdani42/nvim-tree.lua',
   requires = 'kyazdani42/nvim-web-devicons',
-  -- config = function()
-  --   require('user.plugins.nvim-tree')
-  -- end,
+  config = function()
+    require('user.plugins.nvim-tree')
+  end,
 })
 use({
   'vim-test/vim-test',
-  -- config = function()
-  --   require('user.plugins.vim-test')
-  -- end,
+  config = function()
+    require('user.plugins.vim-test')
+  end,
 })
-
 use({
   'voldikss/vim-floaterm',
-  -- config = function()
-  --   require('user.plugins.floaterm')
-  -- end,
+  config = function()
+    require('user.plugins.floaterm')
+  end,
 })
-
 use({
   'nvim-telescope/telescope.nvim',
   requires = {
@@ -165,7 +163,7 @@ use({
     require('user.plugins.telescope')
   end,
 })
--- TODO Someday get into this
+-- TODO Set up Treesitter on a slow day (config file already present)
 -- use({
 --   'nvim-treesitter/nvim-treesitter',
 --   run = ':TSUpdate',
@@ -253,9 +251,9 @@ use({
 use({
   'folke/trouble.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
-  -- config = function()
-  --   require('trouble').setup()
-  -- end,
+  config = function()
+    require('trouble').setup()
+  end,
 })
 -- TODO treesitter needed
 -- use({
