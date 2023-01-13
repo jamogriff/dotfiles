@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+DOTFILES=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+rm -f usr/local/bin/marksman
+sudo ln -s $DOTFILES/lsps/marksman-linux /usr/local/bin/marksman
