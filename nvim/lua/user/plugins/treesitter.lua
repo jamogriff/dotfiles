@@ -1,8 +1,13 @@
 require('nvim-treesitter.configs').setup({
+  ensure_installed = { "php", "lua", "javascript" },
+  -- Install parsers synchronously (only applied to `ensure_installed`)
+  sync_install = false,
+  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
+  auto_install = false,
   highlight = {
     enable = true,
     disable = { 'NvimTree' },
-    additional_vim_regex_highlighting = true,
+    additional_vim_regex_highlighting = true, -- this may slow down vim
   },
   textobjects = {
     select = {

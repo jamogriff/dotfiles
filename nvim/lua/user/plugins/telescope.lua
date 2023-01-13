@@ -21,7 +21,8 @@ telescope.setup({
     sorting_strategy = 'ascending',
     mappings = {
       i = {
-        ['<esc>'] = actions.close,
+        ['kj'] = actions.close,
+        ['jk'] = actions.close,
         ['<C-Down>'] = actions.cycle_history_next,
         ['<C-Up>'] = actions.cycle_history_prev,
       },

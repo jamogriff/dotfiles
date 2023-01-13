@@ -163,19 +163,21 @@ use({
     require('user.plugins.telescope')
   end,
 })
--- TODO Set up Treesitter on a slow day (config file already present)
--- use({
---   'nvim-treesitter/nvim-treesitter',
---   run = ':TSUpdate',
---   requires = {
---     'nvim-treesitter/playground',
---     'nvim-treesitter/nvim-treesitter-textobjects',
---     'JoosepAlviste/nvim-ts-context-commentstring',
---   },
---   config = function()
---     require('user.plugins.treesitter')
---   end,
--- })
+use({
+  'nvim-treesitter/nvim-treesitter',
+  run = function()
+    local ts_update = require('nvim-treesitter.install').update({ with_sync = true })
+    ts_update()
+  end,
+  requires = {
+    'nvim-treesitter/playground',
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    'JoosepAlviste/nvim-ts-context-commentstring',
+  },
+  config = function()
+    require('user.plugins.treesitter')
+  end,
+})
 use({
   'tpope/vim-fugitive',
   requires = 'tpope/vim-rhubarb',
@@ -255,14 +257,13 @@ use({
     require('trouble').setup()
   end,
 })
--- TODO treesitter needed
--- use({
---   'danymat/neogen',
---   config = function()
---     require('neogen').setup({})
---   end,
---   requires = 'nvim-treesitter/nvim-treesitter',
--- })
+use({
+  'danymat/neogen',
+  config = function()
+    require('neogen').setup({})
+  end,
+  requires = 'nvim-treesitter/nvim-treesitter',
+})
 use({
   'glepnir/dashboard-nvim',
   config = function()

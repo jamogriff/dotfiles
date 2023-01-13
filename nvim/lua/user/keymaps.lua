@@ -1,6 +1,10 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Easy escape
+vim.keymap.set('i', 'jk', '<Esc>')
+vim.keymap.set('i', 'kj', '<Esc>')
+
 -- When text is wrapped, move by terminal rows, not lines, unless a count is provided
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true })
@@ -26,7 +30,7 @@ vim.keymap.set('i', ',,', '<Esc>A,')
 vim.keymap.set('n', '<Leader>k', ':nohlsearch<CR>')
 
 -- Open current file in default OS program
-vim.keymap.set('n', '<Leader>', ':!xdg-open %<CR><CR>')
+vim.keymap.set('n', '<Leader>o', ':!xdg-open %<CR><CR>')
 
 -- Handy switch lines with each other
 vim.keymap.set('i', '<A-j>', '<Esc>:move .+1<CR>==gi')
