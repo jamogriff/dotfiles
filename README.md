@@ -10,6 +10,7 @@ Running `install-nvim` will install Neovim and all of its plugins and tailored c
 
 ## System Prereq's
 For proper setup of everything you must have the following installed on a Linux computer:
+- xclip
 - tmux
 - curl
 - unzip
