@@ -58,6 +58,14 @@ require('lspconfig').intelephense.setup({
   capabilities = capabilities,
 })
 
+require('lspconfig').tsserver.setup({
+  capabilities = capabilities,
+})
+
+require('lspconfig').yamlls.setup({
+  capabilities = capabilities,
+})
+
 require('lspconfig').marksman.setup({
   on_attach = function(client, bufnr)
     on_attach(client, bufnr)

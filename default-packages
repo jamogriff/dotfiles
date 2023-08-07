@@ -1,1 +1,6 @@
+// Node stable global packages
 intelephense
+typescript
+typescript-language-server
+yaml-language-server
+
