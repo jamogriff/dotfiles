@@ -58,20 +58,9 @@ require('lspconfig').intelephense.setup({
   capabilities = capabilities,
 })
 
-require('lspconfig').tsserver.setup({
-  capabilities = capabilities,
-})
-
-require('lspconfig').yamlls.setup({
-  capabilities = capabilities,
-})
-
-require('lspconfig').marksman.setup({
-  on_attach = function(client, bufnr)
-    on_attach(client, bufnr)
-  end,
-  capabilities = capabilities,
-})
+vim.lsp.enable('tsserver')
+vim.lsp.enable('yamlls')
+vim.lsp.enable('marksman')
 
 vim.fn.sign_define('DiagnosticSignError', { text = '', texthl = 'DiagnosticSignError' })
 vim.fn.sign_define('DiagnosticSignWarn', { text = '', texthl = 'DiagnosticSignWarn' })
