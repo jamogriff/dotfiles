@@ -166,8 +166,10 @@ use({
 use({
   'nvim-treesitter/nvim-treesitter',
   run = function()
-    local ts_update = require('nvim-treesitter.install').update({ with_sync = true })
-    ts_update()
+    local ts_install = require('nvim-treesitter.install')
+    if ts_install then
+      ts_install.update({ with_sync = true })
+    end
   end,
   requires = {
     'nvim-treesitter/playground',
@@ -268,6 +270,12 @@ use({
   'glepnir/dashboard-nvim',
   config = function()
     require('user.plugins.dashboard')
+  end,
+})
+use({
+  'lervag/vimtex',
+  config = function()
+    require('user.plugins.vimtex')
   end,
 })
 -- Automatically install plugins on initial run
