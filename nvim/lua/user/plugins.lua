@@ -177,6 +177,14 @@ use({
     'JoosepAlviste/nvim-ts-context-commentstring',
   },
   config = function()
+    -- Skip loading deprecated module
+    vim.g.skip_ts_context_commentstring_module = true
+
+    -- Use updated interface and
+    -- disable autocmd-based updates if not needed
+    require('ts_context_commentstring').setup({
+        enable_autocmd = false,
+    })
     require('user.plugins.treesitter')
   end,
 })
