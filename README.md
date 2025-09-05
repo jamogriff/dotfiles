@@ -18,11 +18,7 @@ For proper setup of everything you must have the following installed on a Linux 
 - ripgrep
 
 ## TODO
-- Install LSP's (and configure in Nvim) for HTML, Css, Sass, Javascript, Typescript, Ruby, SQL...
+- Setup other useful LSP's (HTML, Css, Sass, JS, TS, Ruby, SQL...?)
 - Symlink `default-packages` to $NVM_DIR in install script so global packages (mostly language servers) can be used on different versions of Node.
-- PHP installation (xml and mbstring libs both needed)
-- Code interpretation through a Dockerfile would be awesome, but may not be possible
-- null-ls.nvim looks interesting but I don't know use cases for why NVim would need to be an LSP server (add JA config if adding)
-- linter plugin support?
-- tpope's projectionist plugin looks helpful for dedicated frameworks (e.g. laravel, symfony); setup with JA as reference if adding
+- Script for installing python and zuban LSP via pip
 
