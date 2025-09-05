@@ -56,9 +56,8 @@ require('lspconfig').intelephense.setup({
   capabilities = capabilities,
 })
 
-vim.lsp.enable('tsserver')
-vim.lsp.enable('yamlls')
 vim.lsp.enable('marksman')
+vim.lsp.enable('zuban')
 
 -- Highlight entire line for errors
 -- Highlight the line number for warnings
