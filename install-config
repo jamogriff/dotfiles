@@ -30,3 +30,6 @@ if [ -f $DOTFILES/.secrets ]; then
 else
     echo 'WARNING: Add .secrets file in directory to properly set env vars'
 fi
+
+rm -f $HOME/.latexmkrc
+ln -s $DOTFILES/latex/.latexmkrc $HOME/.latexmkrc
