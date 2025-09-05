@@ -1,24 +1,45 @@
-local db = require('dashboard')
-
-db.custom_header = {
-    '',
-    '░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░',
-    '░░░░░░   ░░        ░░░░░░     ░░░░',
-    '▒▒▒▒▒▒   ▒▒   ▒▒▒▒   ▒▒  ▒▒▒▒   ▒▒',
-    '▒▒▒▒▒▒   ▒▒   ▒▒▒▒   ▒  ▒▒▒▒▒▒▒▒▒▒',
-    '▓▓▓▓▓▓   ▓▓        ▓▓▓   ▓▓▓▓▓▓▓▓▓',
-    '▓▓▓▓▓▓   ▓▓   ▓▓▓▓▓▓▓▓   ▓▓▓      ',
-    '▓  ▓▓▓   ▓▓   ▓▓▓▓▓▓▓▓▓   ▓▓▓▓  ▓▓',
-    '██     ████   ██████████      ████',
-    '██████████████████████████████████',
-    '',
-}
-
-db.custom_center = {
-  { icon = '  ', desc = 'New file                       ', action = 'enew' },
-  { icon = '  ', shortcut = 'SPC f', desc = 'Find file                 ', action = 'Telescope find_files' },
-  { icon = '  ', shortcut = 'SPC h', desc = 'Recent files              ', action = 'Telescope oldfiles' },
-  { icon = '  ', shortcut = 'SPC g', desc = 'Find Word                 ', action = 'Telescope live_grep' },
-}
-
-db.custom_footer = { nil }
+require('dashboard').setup({
+  theme = 'doom',
+  config = {
+    header = {
+      '',
+      '',
+      '+------------------------------------------------+',
+      '|     *  .   *                   o *             |',
+      '|                                                |',
+      '|    .--.      .--.    .--.                      |',
+      '|                                                |',
+      '|                      /‾‾                       |',
+      '|                     /    ‾     /‾‾             |',
+      '|        /‾‾         /      ‾   /    ‾    /‾‾    |',
+      '|       /    ‾  /‾‾ /        ‾ /      ‾ /    ‾   |',
+      '|______/______‾/    ‾________________/______‾____|',
+      '|                                                |',
+      '|  ~ ~  ~     ~  ~~  ~   ~  ~~ ~    ChatGPT 2025 |',
+      '+------------------------------------------------+',
+      '',
+    },
+    center = {
+      {
+        icon = '   ',
+        desc = 'Find File              ',
+        key = 'f',
+        action = 'Telescope find_files'
+      },
+      {
+        icon = '   ',
+        desc = 'Recent Files',
+        key = "h",
+        action = 'Telescope oldfiles'
+      },
+      {
+        icon = '   ',
+        desc = 'Find Word',
+        key = 'g',
+        action = 'Telescope live_grep'
+      },
+    },
+    footer = {"Silence is golden."},
+    vertical_center = false,
+  }
+})

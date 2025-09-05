@@ -22,7 +22,6 @@ telescope.setup({
     mappings = {
       i = {
         ['kj'] = actions.close,
-        ['jk'] = actions.close,
         ['<C-Down>'] = actions.cycle_history_next,
         ['<C-Up>'] = actions.cycle_history_prev,
       },
