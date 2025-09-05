@@ -149,6 +149,12 @@ use({
   config = function()
     require('user.plugins.floaterm')
   end,
+  run = function()
+    local healthfile = vim.fn.stdpath("data") .. "/site/pack/packer/start/vim-floaterm/autoload/health/floaterm.vim"
+    if vim.fn.filereadable(healthfile) == 1 then
+      vim.fn.delete(healthfile)
+    end
+  end,
 })
 use({
   'nvim-telescope/telescope.nvim',
