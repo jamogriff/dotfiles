@@ -1,4 +1,4 @@
-local separator = { '"▏"', color = 'StatusLineNonText' }
+local separator = { '"▕"', color = 'StatusLineNonText' }
 
 require('lualine').setup({
   options = {
@@ -16,32 +16,33 @@ require('lualine').setup({
   sections = {
     lualine_a = {
       'mode',
-      separator,
     },
     lualine_b = {
       'branch',
       'diff',
-      separator,
-      '"🖧  " .. tostring(#vim.tbl_keys(vim.lsp.get_clients()))',
-      { 'diagnostics', sources = { 'nvim_diagnostic' } },
-      separator,
     },
     lualine_c = {
-      'filename'
+      separator,
+      {
+        'filename',
+        path = 1
+      },
     },
     lualine_x = {
-      'filetype',
-      'encoding',
-      'fileformat',
+      '"🖧  " .. tostring(#vim.tbl_keys(vim.lsp.get_clients()))',
+      {
+        'diagnostics',
+        sources = {'nvim_diagnostic'},
+        sections = {'error', 'warn'},
+        symbols = {error = '', warn = ''},
+      },
+      separator
     },
     lualine_y = {
-      separator,
-      '(vim.bo.expandtab and "␠ " or "⇥ ") .. " " .. vim.bo.shiftwidth',
-      separator,
+      'filetype',
     },
     lualine_z = {
       'location',
-      'progress',
     },
   },
 })

@@ -34,23 +34,10 @@ use({
   config = function()
     vim.cmd('colorscheme kanagawa')
 
-    -- TODO not sure what the overrides below are doing honestly...
-    -- Hide the characters in FloatBorder
-    vim.api.nvim_set_hl(0, 'FloatBorder', {
-      fg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
-      bg = vim.api.nvim_get_hl_by_name('NormalFloat', true).background,
-    })
-
-    -- -- Make the StatusLineNonText background the same as StatusLine
+    -- Chills out separator characters on LuaLine
     vim.api.nvim_set_hl(0, 'StatusLineNonText', {
       fg = vim.api.nvim_get_hl_by_name('NonText', true).foreground,
       bg = vim.api.nvim_get_hl_by_name('StatusLine', true).background,
-    })
-
-    -- -- Hide the characters in CursorLineBg
-    vim.api.nvim_set_hl(0, 'CursorLineBg', {
-      fg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
-      bg = vim.api.nvim_get_hl_by_name('CursorLine', true).background,
     })
 
     vim.api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#30323E' })
@@ -139,17 +126,12 @@ use({
   end,
 })
 use({
-  'vim-test/vim-test',
-  config = function()
-    require('user.plugins.vim-test')
-  end,
-})
-use({
   'voldikss/vim-floaterm',
   config = function()
     require('user.plugins.floaterm')
   end,
   run = function()
+    -- Devs left deprecated health calls, so we delete the Vim-specific file that calls those
     local healthfile = vim.fn.stdpath("data") .. "/site/pack/packer/start/vim-floaterm/autoload/health/floaterm.vim"
     if vim.fn.filereadable(healthfile) == 1 then
       vim.fn.delete(healthfile)
@@ -204,13 +186,7 @@ use({
   'lewis6991/gitsigns.nvim',
   requires = 'nvim-lua/plenary.nvim',
   config = function()
-    require('gitsigns').setup({
-      sign_priority = 20,
-      on_attach = function(bufnr)
-        vim.keymap.set('n', ']h', "&diff ? ']c' : '<cmd>Gitsigns next_hunk<CR>'", { expr = true, buffer = bufnr })
-        vim.keymap.set('n', '[h', "&diff ? '[c' : '<cmd>Gitsigns prev_hunk<CR>'", { expr = true, buffer = bufnr })
-      end,
-    })
+    require('user.plugins.gitsigns')
   end,
 })
 use({
@@ -281,10 +257,12 @@ use({
   requires = 'nvim-treesitter/nvim-treesitter',
 })
 use({
-  'glepnir/dashboard-nvim',
+  'nvimdev/dashboard-nvim',
+  event = 'VimEnter',
   config = function()
     require('user.plugins.dashboard')
   end,
+  requires = {'nvim-tree/nvim-web-devicons'}
 })
 use({
   'lervag/vimtex',
