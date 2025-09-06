@@ -15,11 +15,6 @@ local packer_bootstrap = ensure_packer()
 -- Initialize packer
 require('packer').init({
   compile_path = vim.fn.stdpath('data')..'/site/plugin/packer_compiled.lua',
---  display = {
---    open_fn = function()
---      return require('packer.util').float({ border = 'solid' })
---    end,
---  },
 })
 
 -- Install plugins
@@ -33,13 +28,6 @@ use({
   'rebelot/kanagawa.nvim',
   config = function()
     vim.cmd('colorscheme kanagawa')
-
-    -- Chills out separator characters on LuaLine
-    vim.api.nvim_set_hl(0, 'StatusLineNonText', {
-      fg = vim.api.nvim_get_hl_by_name('NonText', true).foreground,
-      bg = vim.api.nvim_get_hl_by_name('StatusLine', true).background,
-    })
-
     vim.api.nvim_set_hl(0, 'NvimTreeIndentMarker', { fg = '#30323E' })
     vim.api.nvim_set_hl(0, 'IndentBlanklineChar', { fg = '#2F313C' })
   end,
@@ -140,6 +128,7 @@ use({
 })
 use({
   'nvim-telescope/telescope.nvim',
+  after = 'kanagawa.nvim',
   requires = {
     { 'nvim-lua/plenary.nvim' },
     { 'BurntSushi/ripgrep'},
@@ -262,7 +251,7 @@ use({
   config = function()
     require('user.plugins.dashboard')
   end,
-  requires = {'nvim-tree/nvim-web-devicons'}
+  requires = {'nvim-tree/nvim-web-devicons'},
 })
 use({
   'lervag/vimtex',
