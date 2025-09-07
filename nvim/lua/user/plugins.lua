@@ -33,72 +33,9 @@ use({
   end,
 })
 
-use('tpope/vim-commentary')
-use('tpope/vim-surround')
-use('tpope/vim-eunuch') -- Useful Unix commands like :Rename and :SudoWrite
-use('tpope/vim-unimpaired') -- Pairs of handy bracket mappings [b or ]b
-use('tpope/vim-sleuth') -- Smart auto-indentation with editorconfig support
-use('tpope/vim-repeat')
-use('sheerun/vim-polyglot')
-use('christoomey/vim-tmux-navigator') -- Cntl-j/k/h/l to move
-use('farmergreg/vim-lastplace')
-use('nelstrom/vim-visual-star-search')
-use('jessarcher/vim-heritage')
-use({
-  'whatyouhide/vim-textobj-xmlattr',
-  requires = 'kana/vim-textobj-user',
-}) -- ix and ax motions for HTML attr
-use({
-  'airblade/vim-rooter',
-  -- Only set project root on initial load
-  setup = function()
-    vim.g.rooter_manual_only = 1
-  end,
-  config = function()
-    vim.cmd('Rooter')
-  end,
-}) -- Set file search, etc based on current project root
-use({
-  'windwp/nvim-autopairs',
-  config = function()
-    require('nvim-autopairs').setup()
-  end,
-})
-use({
-  'karb94/neoscroll.nvim',
-  config = function()
-    require('neoscroll').setup()
-  end,
-  })
-use({
-  'famiu/bufdelete.nvim',
-  config = function()
-    vim.keymap.set('n', '<Leader>q', ':Bdelete<CR>')
-  end,
-})
-use({
-  'AndrewRadev/splitjoin.vim',
-  config = function()
-    vim.g.splitjoin_html_attributes_bracket_on_new_line = 1
-    vim.g.splitjoin_trailing_comma = 1
-    vim.g.splitjoin_php_method_chain_full = 1
-  end,
-})
-use('sickill/vim-pasta')
-use({
-  'lukas-reineke/indent-blankline.nvim',
-  config = function()
-    require('user.plugins.indent-blankline')
-  end,
-})
-use({
-  'akinsho/bufferline.nvim',
-  requires = 'kyazdani42/nvim-web-devicons',
-  after = 'kanagawa.nvim',
-  config = function()
-    require('user.plugins.bufferline')
-  end,
-})
+--[[
+-- Core
+--]]
 use({
   'nvim-lualine/lualine.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
@@ -140,6 +77,27 @@ use({
     require('user.plugins.telescope')
   end,
 })
+-- Rename in a popup window
+use({
+  'hood/popui.nvim',
+  requires = 'RishabhRD/popfix',
+  config = function()
+    vim.ui.select = require('popui.ui-overrider')
+    vim.ui.input = require('popui.input-overrider')
+  end,
+})
+
+-- [[
+-- Lang and syntax
+-- ]]
+use('sheerun/vim-polyglot')
+use('tpope/vim-sleuth')
+use({
+  'lukas-reineke/indent-blankline.nvim',
+  config = function()
+    require('user.plugins.indent-blankline')
+  end,
+})
 use({
   'nvim-treesitter/nvim-treesitter',
   run = function()
@@ -166,19 +124,6 @@ use({
   end,
 })
 use({
-  'tpope/vim-fugitive',
-  requires = 'tpope/vim-rhubarb',
-  cmd = 'G',
-})
-
-use({
-  'lewis6991/gitsigns.nvim',
-  requires = 'nvim-lua/plenary.nvim',
-  config = function()
-    require('user.plugins.gitsigns')
-  end,
-})
-use({
   'neovim/nvim-lspconfig',
   requires = {
     'folke/lsp-colors.nvim',
@@ -187,50 +132,48 @@ use({
     require('user.plugins.lspconfig')
   end,
 })
+
+--[[
+-- QOL
+--]]
+use('farmergreg/vim-lastplace')
 use({
-  'L3MON4D3/LuaSnip',
+  'airblade/vim-rooter',
+  -- Only set project root on initial load
+  setup = function()
+    vim.g.rooter_manual_only = 1
+  end,
   config = function()
-    require('user.plugins.luasnip')
+    vim.cmd('Rooter')
+  end,
+}) -- Set file search, etc based on current project root
+use('sickill/vim-pasta') -- Smart-indent pasting
+use({
+  'tpope/vim-fugitive',
+  requires = 'tpope/vim-rhubarb',
+  cmd = 'G',
+})
+use({
+  'lewis6991/gitsigns.nvim',
+  requires = 'nvim-lua/plenary.nvim',
+  config = function()
+    require('user.plugins.gitsigns')
   end,
 })
 use({
   'hrsh7th/nvim-cmp',
   requires = {
-    'L3MON4D3/LuaSnip',
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-cmdline',
     'hrsh7th/cmp-nvim-lsp',
     'hrsh7th/cmp-nvim-lsp-signature-help',
     'hrsh7th/cmp-nvim-lua',
-    'jessarcher/cmp-path',
     'onsails/lspkind-nvim',
-    'saadparwaiz1/cmp_luasnip',
   },
   config = function()
     require('user.plugins.cmp')
   end,
 })
---  Not dealing with this right now since Intelephense is working great as an LSP server
--- use({
---   'phpactor/phpactor',
---   branch = 'master',
---   ft = 'php',
---   run = 'composer install --no-dev -o',
---   -- config = function()
---   --   require('user.plugins.phpactor')
---   -- end,
--- })
-
--- Rename in a popup window
-use({
-  'hood/popui.nvim',
-  requires = 'RishabhRD/popfix',
-  config = function()
-    vim.ui.select = require('popui.ui-overrider')
-    vim.ui.input = require('popui.input-overrider')
-  end,
-})
-
 use({
   'folke/trouble.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
@@ -244,7 +187,45 @@ use({
     require('neogen').setup({})
   end,
   requires = 'nvim-treesitter/nvim-treesitter',
+}) -- Generates annotations with :Neogen
+use({
+  'windwp/nvim-autopairs',
+  config = function()
+    require('nvim-autopairs').setup()
+  end,
 })
+
+-- [[
+-- Useful keybinds and motions
+-- ]]
+use('tpope/vim-commentary')
+use('tpope/vim-surround') -- lazy load on key
+use('nelstrom/vim-visual-star-search') -- hit star to search for word in file
+use({
+  'karb94/neoscroll.nvim',
+  config = function()
+    require('neoscroll').setup()
+  end,
+})
+use({
+  'famiu/bufdelete.nvim',
+  config = function()
+    vim.keymap.set('n', '<Leader>q', ':Bdelete<CR>')
+  end,
+})
+use({
+  'AndrewRadev/splitjoin.vim',
+  config = function()
+    vim.g.splitjoin_html_attributes_bracket_on_new_line = 1
+    vim.g.splitjoin_trailing_comma = 1
+    vim.g.splitjoin_php_method_chain_full = 1
+  end,
+}) -- split/join lines gS/gJ
+
+
+--[[
+--Fun
+--]]
 use({
   'nvimdev/dashboard-nvim',
   event = 'VimEnter',
@@ -253,12 +234,31 @@ use({
   end,
   requires = {'nvim-tree/nvim-web-devicons'},
 })
+
+-- [[
+-- Meh
+-- ]]
+-- Duplicate info to LuaLine
+use({
+  'akinsho/bufferline.nvim',
+  requires = 'kyazdani42/nvim-web-devicons',
+  after = 'kanagawa.nvim',
+  config = function()
+    require('user.plugins.bufferline')
+  end,
+  disable = true,
+})
+
+--[[
+-- Beta/experimental
+--]]
 use({
   'lervag/vimtex',
   config = function()
     require('user.plugins.vimtex')
   end,
 })
+
 -- Automatically install plugins on initial run
 if packer_bootstrap then
   require('packer').sync()

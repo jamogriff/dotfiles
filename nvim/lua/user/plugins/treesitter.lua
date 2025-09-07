@@ -1,7 +1,7 @@
 local config = require('nvim-treesitter.configs')
 
 config.setup({
-  ensure_installed = { "php", "lua", "javascript", "ruby" },
+  ensure_installed = { "php", "lua", "javascript", "ruby", "python" },
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
   -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
