@@ -36,6 +36,7 @@ use({
 --[[
 -- Core
 --]]
+use('christoomey/vim-tmux-navigator') -- Cntl-j/k/h/l to move
 use({
   'nvim-lualine/lualine.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
