@@ -23,6 +23,10 @@ local use = require('packer').use
 -- Packer can manage itself
 use('wbthomason/packer.nvim')
 
+--[[
+-- Core
+--]]
+--
 -- Theme
 use({
   'rebelot/kanagawa.nvim',
@@ -32,10 +36,6 @@ use({
     vim.api.nvim_set_hl(0, 'IndentBlanklineChar', { fg = '#2F313C' })
   end,
 })
-
---[[
--- Core
---]]
 use('christoomey/vim-tmux-navigator') -- Cntl-j/k/h/l to move
 use({
   'nvim-lualine/lualine.nvim',
@@ -87,9 +87,24 @@ use({
     vim.ui.input = require('popui.input-overrider')
   end,
 })
+use('farmergreg/vim-lastplace')
+use({
+  'airblade/vim-rooter',
+  -- Only set project root on initial load
+  setup = function()
+    vim.g.rooter_manual_only = 1
+  end,
+  config = function()
+    vim.cmd('Rooter')
+  end,
+}) -- Set file search, etc based on current project root
+use('sickill/vim-pasta') -- Smart-indent pasting
+--[[
+--End core
+--]]
 
 -- [[
--- Lang and syntax
+-- Code -- Lang, syntax, parsing, code quality and tooling
 -- ]]
 use('sheerun/vim-polyglot')
 use('tpope/vim-sleuth')
@@ -133,34 +148,6 @@ use({
     require('user.plugins.lspconfig')
   end,
 })
-
---[[
--- QOL
---]]
-use('farmergreg/vim-lastplace')
-use({
-  'airblade/vim-rooter',
-  -- Only set project root on initial load
-  setup = function()
-    vim.g.rooter_manual_only = 1
-  end,
-  config = function()
-    vim.cmd('Rooter')
-  end,
-}) -- Set file search, etc based on current project root
-use('sickill/vim-pasta') -- Smart-indent pasting
-use({
-  'tpope/vim-fugitive',
-  requires = 'tpope/vim-rhubarb',
-  cmd = 'G',
-})
-use({
-  'lewis6991/gitsigns.nvim',
-  requires = 'nvim-lua/plenary.nvim',
-  config = function()
-    require('user.plugins.gitsigns')
-  end,
-})
 use({
   'hrsh7th/nvim-cmp',
   requires = {
@@ -183,24 +170,40 @@ use({
   end,
 })
 use({
-  'danymat/neogen',
-  config = function()
-    require('neogen').setup({})
-  end,
-  requires = 'nvim-treesitter/nvim-treesitter',
-}) -- Generates annotations with :Neogen
-use({
   'windwp/nvim-autopairs',
   config = function()
     require('nvim-autopairs').setup()
   end,
 })
+use({
+  'danymat/neogen',
+  config = function()
+    require('neogen').setup({})
+  end,
+  requires = 'nvim-treesitter/nvim-treesitter',
+}) -- Generates annotations with :Neogen: TODO: load on command
+use({
+  'tpope/vim-fugitive',
+  requires = 'tpope/vim-rhubarb',
+  cmd = 'G',
+})
+use({
+  'lewis6991/gitsigns.nvim',
+  requires = 'nvim-lua/plenary.nvim',
+  config = function()
+    require('user.plugins.gitsigns')
+  end,
+})
+--[[
+-- End Code
+--]]
 
--- [[
--- Useful keybinds and motions
--- ]]
+--[[
+-- Keybindings
+-- TODO: load on keymaps
+--]]
 use('tpope/vim-commentary')
-use('tpope/vim-surround') -- lazy load on key
+use('tpope/vim-surround')
 use('nelstrom/vim-visual-star-search') -- hit star to search for word in file
 use({
   'karb94/neoscroll.nvim',
@@ -222,10 +225,12 @@ use({
     vim.g.splitjoin_php_method_chain_full = 1
   end,
 }) -- split/join lines gS/gJ
-
+--[[
+--End keybindings
+--]]
 
 --[[
---Fun
+-- Extras
 --]]
 use({
   'nvimdev/dashboard-nvim',
@@ -235,30 +240,15 @@ use({
   end,
   requires = {'nvim-tree/nvim-web-devicons'},
 })
-
--- [[
--- Meh
--- ]]
--- Duplicate info to LuaLine
-use({
-  'akinsho/bufferline.nvim',
-  requires = 'kyazdani42/nvim-web-devicons',
-  after = 'kanagawa.nvim',
-  config = function()
-    require('user.plugins.bufferline')
-  end,
-  disable = true,
-})
-
---[[
--- Beta/experimental
---]]
 use({
   'lervag/vimtex',
   config = function()
     require('user.plugins.vimtex')
   end,
-})
+})-- TODO: load on filetype (.tex?))
+--[[
+--End Extras
+--]]
 
 -- Automatically install plugins on initial run
 if packer_bootstrap then
