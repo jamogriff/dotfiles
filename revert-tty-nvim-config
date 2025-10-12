@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Initionalzing the TTY Nvim config moves files
+# prior to symlinking. This reversed the process.
+DOTFILES=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+if [ -f $DOTFILES/nvim/lua/user/desktop-plugins.lua ]; then
+    mv $DOTFILES/nvim/lua/user/plugins.lua $DOTFILES/nvim/lua/user/tty-plugins.lua
+    mv $DOTFILES/nvim/lua/user/desktop-plugins.lua $DOTFILES/nvim/lua/user/plugins.lua
+else
+    echo 'File reversion not needed.'
+fi
