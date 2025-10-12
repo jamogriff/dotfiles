@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-DOTFILES=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+INIT_SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+DOTFILES="${INIT_SCRIPT_DIR}/../.."
+
+# Ensure there is a config directory
+[ -d "$HOME/.config" ] || mkdir -p "$HOME/.config"
 
 rm -rf $HOME/.config/kitty
 ln -s $DOTFILES/kitty $HOME/.config/kitty
