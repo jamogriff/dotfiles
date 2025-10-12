@@ -2,11 +2,24 @@
 $HOME sweet $HOME (inspired by Jess Archer)
 
 ## Get Started
-Running the `install-config` script will install fonts, config files and will switch the Escape and Caps Lock keys.
+
+These dotfiles provide setup for desktop and TTY computers.
+
+### Desktop Computer
+
+Running the `init/desktop/install-config` script will install fonts, config files and will switch the Escape and Caps Lock keys.
 (If you you want to keep your Caps Lock key then run `gsettings reset org.gnome.desktop.input-sources xkb-options`).
-Running the `install-terminal` script will install the Kitty terminal emulator.
+Running the `init/desktop/install-terminal` script will install the Kitty terminal emulator.
 Running `install-nvim` will install Neovim and all of its plugins and tailored configurations.
 *Note that I would probably run those scripts in that order, but it may not matter*
+
+### TTY Computer
+
+Run `init/tty/install-config` to install TMUX, scripts and nvim config. Run `install-nvim` to install Neovim.
+Note that you'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
+
+
+
 
 ## System Prereq's
 For proper setup of everything you must have the following installed on a Linux computer:
@@ -16,6 +29,10 @@ For proper setup of everything you must have the following installed on a Linux 
 - unzip
 - fzf
 - ripgrep
+
+## PHP Stuff
+
+If you're intending on using PHP then install `intelephense` via node and place your key in `~/.secrets/`.
 
 ## TODO
 - Setup other useful LSP's (HTML, Css, Sass, JS, TS, Ruby, SQL...?)
