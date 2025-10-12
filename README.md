@@ -16,7 +16,10 @@ Running `install-nvim` will install Neovim and all of its plugins and tailored c
 ### TTY Computer
 
 Run `init/tty/install-config` to install TMUX, scripts and nvim config. Run `install-nvim` to install Neovim.
-Note that you'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
+
+**Notes:**
+- You'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
+- You should run `revert-tty-nvim-config` immediately afterward to prevent possibility of committing the file moves done in service of setting up NVim on TTY
 
 
 
