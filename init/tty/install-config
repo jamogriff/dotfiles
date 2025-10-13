@@ -12,6 +12,8 @@ ln -s $DOTFILES/tmux/tmux.conf $HOME/.tmux.conf
 mkdir -p $HOME/.local/bin
 rm -f $HOME/.local/bin/t
 ln -s $DOTFILES/scripts/t $HOME/.local/bin/t
+rm -f $HOME/.local/bin/mac_display
+ln -s $DOTFILES/scripts/mac_display $HOME/.local/bin/mac_display
 
 rm -rf $HOME/.config/nvim
 
