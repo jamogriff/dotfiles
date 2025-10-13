@@ -23,8 +23,9 @@ esac
 if $state; then
   su -c 'echo 40 > /sys/class/backlight/nv_backlight/brightness'
 else
-  echo 'Display will shutoff in 3 seconds.'
-  echo "To turn back on, ssh into this machine and run 'mac_display on'."
-  sleep 3
+  echo 'Note: Display will shutoff after entering root password.'
+  echo "To turn display back on, ssh into this machine and run 'mac_display on'."
+  sleep 0.5
   su -c 'echo 0 > /sys/class/backlight/nv_backlight/brightness'
+  sleep 0.5
 fi
