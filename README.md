@@ -26,7 +26,7 @@ Run `init/tty/install-config` to install TMUX, scripts and nvim config. Run `ins
 
 ## System Prereq's
 For proper setup of everything you must have the following installed on a Linux computer:
-- xclip
+- xclip (for Wayland-based Desktop Environments, use `wl-clipboard`)
 - tmux
 - curl
 - unzip
