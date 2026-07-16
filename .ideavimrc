@@ -1,0 +1,154 @@
+" ===========================================================================
+" .ideavimrc
+" A port of https://github.com/jamogriff/dotfiles  nvim/lua/user/*
+" Things handled natively by the IDE (LSP, completion, snippets, treesitter,
+" colorscheme, dashboard, statusline) were left out since IdeaVim doesn't
+" manage those layers — the IDE already does.
+" ===========================================================================
+
+" ---------------------------------------------------------------------------
+" Leader
+" ---------------------------------------------------------------------------
+let mapleader = " "
+let maplocalleader = " "
+
+" ---------------------------------------------------------------------------
+" Plugin emulation
+" ---------------------------------------------------------------------------
+set surround
+set commentary
+set matchit
+set highlightedyank
+set exchange
+set argtextobj
+set textobj-entire
+set ReplaceWithRegister
+set multiple-cursors
+set NERDTree
+set easymotion             " needs the AceJump plugin installed too
+
+" ---------------------------------------------------------------------------
+" Options
+" ---------------------------------------------------------------------------
+syntax on
+set encoding=utf-8
+set expandtab
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+
+set nowrap
+
+set number
+set relativenumber
+
+set ignorecase
+set smartcase
+set incsearch
+set hlsearch
+
+set scrolloff=8
+set sidescrolloff=8
+
+" IdeaVim's stand-in for clipboard=unnamedplus: routes yank/delete/paste
+" through the system clipboard like the nvim option does.
+set clipboard+=unnamedplus
+
+" A couple of small IdeaVim-only quality-of-life options worth having:
+set ideajoin                 " J joins lines the "IDE way" (smarter than plain Vim join)
+set idearefactormode=keep    " stay in normal mode during IDE rename/refactor popups
+
+" ---------------------------------------------------------------------------
+" Keymaps
+" ---------------------------------------------------------------------------
+
+" Easy escape
+inoremap jk <Esc>
+inoremap kj <Esc>
+
+" Reselect visual selection after indenting
+vnoremap > >gv
+vnoremap < <gv
+
+" Keep cursor in place after yanking a visual selection
+vnoremap y ygv<Esc>
+
+" Disable the accidental command-history window
+nnoremap q: :q
+
+" Paste over a visual selection without clobbering the unnamed register
+vnoremap p "_dP
+
+" Quick ; or , at end of line
+inoremap ;; <Esc>A;
+inoremap ,, <Esc>A,
+
+" Clear search highlighting
+nnoremap <Leader>k :nohlsearch<CR>
+
+" Move the current line up/down, keeping indentation (IDE-native version
+" of the nvim :move .+1<CR>== mapping)
+nmap <A-j> <Action>(MoveLineDown)
+nmap <A-k> <Action>(MoveLineUp)
+imap <A-j> <Esc><Action>(MoveLineDown)i
+imap <A-k> <Esc><Action>(MoveLineUp)i
+vmap <A-j> <Action>(MoveLineDown)
+vmap <A-k> <Action>(MoveLineUp)
+
+" ---------------------------------------------------------------------------
+" Intellisense built-in fuzzy navigation/search
+" ---------------------------------------------------------------------------
+nmap <leader>f <Action>(GotoFile)
+nmap <leader>F <Action>(SearchEverywhere)
+nmap <leader>b <Action>(Switcher)
+nmap <leader>g <Action>(FindInPath)
+nmap <leader>h <Action>(RecentFiles)
+
+" ---------------------------------------------------------------------------
+" Window and context management
+" ---------------------------------------------------------------------------
+nmap <leader>n <Action>(ActivateProjectToolWindow)
+nmap <leader>1 <Action>(ActivateTerminalToolWindow)
+nmap <leader>q <Action>(CloseContent)
+
+" Resize the current split with the arrow keys
+nmap <C-Up> <Action>(StretchSplitToTop)
+nmap <C-Down> <Action>(StretchSplitToBottom)
+nmap <C-Left> <Action>(StretchSplitToLeft)
+nmap <C-Right> <Action>(StretchSplitToRight)
+
+" vim-tmux-navigator-style direct split navigation
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" ---------------------------------------------------------------------------
+" Shortcuts to utilize Intellisense LSP
+" (gd/gD/gi/gr already have sensible IdeaVim defaults; these make sure they
+" point at the same actions the nvim config wired up)
+" ---------------------------------------------------------------------------
+nmap K <Action>(QuickJavaDoc)
+nmap gd <Action>(GotoDeclaration)
+nmap gD <Action>(GotoTypeDeclaration)
+nmap gi <Action>(GotoImplementation)
+nmap gr <Action>(FindUsages)
+nmap <leader>rn <Action>(RenameElement)
+nmap <leader>D <Action>(GotoTypeDeclaration)
+nmap <leader>d <Action>(ShowErrorDescription)
+nmap [d <Action>(GotoPreviousError)
+nmap ]d <Action>(GotoNextError)
+
+" ---------------------------------------------------------------------------
+" gitsigns.lua  ->  IntelliJ's VCS gutter / change-marker actions
+" (double-check these against Find Action / Ctrl+Shift+A — exact ids can
+" shift slightly between IDE versions)
+" ---------------------------------------------------------------------------
+nmap ]c <Action>(VcsShowNextChangeMarker)
+nmap [c <Action>(VcsShowPrevChangeMarker)
+nmap <leader>hp <Action>(VcsShowCurrentChangeMarker)
+nmap <leader>hb <Action>(Annotate)
+nmap <leader>hr <Action>(Vcs.RollbackChangedLines)
+
+" Autoclosing of HTML tags:
+let g:closetag_filenames = '*.html'
