@@ -23,6 +23,7 @@ ln -s $DOTFILES/scripts/t $HOME/.local/bin/t
 
 rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
+echo desktop > "$HOME/.dotfiles-profile"
 
 # Switch Escape and Caps Lock
 gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"
