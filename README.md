@@ -29,8 +29,8 @@ scripts below **in order**.
 5. Launch `nvim` (same first-run plugin/LSP bootstrap as the desktop path above).
 
 **Notes:**
-- You'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
-
+- You'll likely need to set `export TERM=xterm-256color` in your `~/.zshrc` file.
+- Highly recommend adding the `git`, `docker` and `docker-compose` oh-my-zsh plugins to `~/.zshrc`.
 
 
 ## System Prereq's

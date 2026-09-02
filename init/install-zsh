@@ -21,6 +21,34 @@ else
   echo "oh-my-zsh already installed at ~/.oh-my-zsh, skipping."
 fi
 
+# Source the .secrets symlink install-config sets up at ~/.local/.secrets (env vars
+# like INTELEPHENSE_LICENSE), whether .zshrc was just freshly templated by oh-my-zsh
+# or is this repo's own pre-existing one kept above.
+if ! grep -qF '.local/.secrets' "$HOME/.zshrc" 2>/dev/null; then
+  cat >>"$HOME/.zshrc" <<'EOF'
+
+if [ -f $HOME/.local/.secrets ]; then
+    source $HOME/.local/.secrets
+else
+    echo 'WARNING: No secrets file found'
+fi
+EOF
+else
+  echo ".secrets sourcing already present in ~/.zshrc, skipping."
+fi
+
+# Enable the recommended git/docker/docker-compose oh-my-zsh plugins. This only
+# touches the line if it's still the untouched fresh-install default (plugins=(git))
+# — the `plugins=` assignment has to run before `source $ZSH/oh-my-zsh.sh` to have any
+# effect, so this can't just be appended to the end of the file like the block above,
+# and an already-customized line is left alone rather than risk mangling it.
+if grep -qx 'plugins=(git)' "$HOME/.zshrc" 2>/dev/null; then
+  sed -i 's/^plugins=(git)$/plugins=(git docker-compose docker)/' "$HOME/.zshrc"
+  echo "Added docker/docker-compose to ~/.zshrc's oh-my-zsh plugins."
+else
+  echo "~/.zshrc's plugins= line isn't the fresh-install default; leaving it as-is (add docker/docker-compose yourself if you want them)."
+fi
+
 CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)"
 if [ "$CURRENT_SHELL" != "$ZSH_BIN" ]; then
   if grep -qx "$ZSH_BIN" /etc/shells; then
