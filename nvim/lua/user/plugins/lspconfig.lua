@@ -57,8 +57,7 @@ vim.lsp.config('intelephense', {
 })
 vim.lsp.enable('intelephense')
 
-vim.lsp.enable('marksman')
-vim.lsp.enable('zuban')
+vim.lsp.enable({ 'marksman', 'zuban', 'html', 'cssls', 'ts_ls', 'ruby_lsp' })
 
 -- Highlight entire line for errors
 -- Highlight the line number for warnings

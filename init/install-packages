@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+# OS-level prerequisites shared by desktop and TTY setups (see README "System Prereq's").
+# Language-server installation itself is handled inside Neovim by mason.nvim — this script
+# only covers what mason can't install for you: the runtimes/tools it and the shell rely on.
+PACKAGES=(xclip tmux curl unzip fzf ripgrep)
+
+sudo apt-get update
+sudo apt-get install -y "${PACKAGES[@]}"
