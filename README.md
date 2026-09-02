@@ -32,13 +32,16 @@ scripts below **in order**.
 
 
 ## System Prereq's
-`init/install-packages` apt-installs a small set of packages needed for a functional dev experience.
+`init/install-packages` apt-installs a small set of packages needed for a functional dev experience,
+then installs [nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby) and
+[uv](https://docs.astral.sh/uv) (Python) — each installer is safe to re-run later to update itself.
 
-Language servers are installed by Neovim's `mason.nvim` and manages them automatically (see `nvim/lua/user/plugins.lua`'s `ensure_installed` list).
-Mason still relies on the underlying language runtime being on your `$PATH` for some servers
-(e.g. Node for the JS/TS/HTML/CSS/SQL servers, a Python for `zuban`, Ruby/gem for `ruby-lsp`) —
-this repo assumes those are managed with your own version manager of choice (nvm/pyenv/rbenv/etc.)
-and doesn't install them for you.
+Language servers are installed by Neovim's `mason.nvim` and manages them automatically (see
+`nvim/lua/user/plugins.lua`'s `ensure_installed` list). Mason still relies on the underlying
+language runtime being on your `$PATH` for some servers (e.g. Node for the JS/TS/HTML/CSS
+servers, Python for `zuban`, Ruby/gem for `ruby-lsp`) — `install-packages` covers that, but you
+still need to actually install a Node/Ruby/Python version through nvm/rbenv/uv yourself (e.g.
+`nvm install --lts`, `rbenv install 3.3.5`, `uv python install`) before mason can use it.
 
 ## Using lazy.nvim and mason.nvim
 
