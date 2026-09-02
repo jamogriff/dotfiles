@@ -16,12 +16,5 @@ rm -f $HOME/.local/bin/mac_display
 ln -s $DOTFILES/scripts/mac_display $HOME/.local/bin/mac_display
 
 rm -rf $HOME/.config/nvim
-
-if [ -f $DOTFILES/nvim/lua/user/desktop-plugins.lua ]; then
-    # Do nothing
-    echo 'Already moved TTY plugin config over'
-else
-    mv $DOTFILES/nvim/lua/user/plugins.lua $DOTFILES/nvim/lua/user/desktop-plugins.lua
-    mv $DOTFILES/nvim/lua/user/tty-plugins.lua $DOTFILES/nvim/lua/user/plugins.lua
-fi
 ln -s $DOTFILES/nvim $HOME/.config/nvim
+echo tty > "$HOME/.dotfiles-profile"

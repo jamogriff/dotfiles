@@ -19,7 +19,6 @@ Run `init/tty/install-config` to install TMUX, scripts and nvim config. Run `ins
 
 **Notes:**
 - You'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
-- You should run `revert-tty-nvim-config` immediately afterward to prevent possibility of committing the file moves done in service of setting up NVim on TTY
 
 
 
