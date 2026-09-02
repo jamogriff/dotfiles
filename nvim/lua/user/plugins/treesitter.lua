@@ -11,6 +11,13 @@ config.setup({
     disable = { 'NvimTree' },
     additional_vim_regex_highlighting = false, -- this may slow down vim
   },
+  indent = {
+    enable = true,
+    -- javascript's indents.scm hits a query-predicate bug against this
+    -- treesitter version's core query engine; falls back to the legacy
+    -- indent/javascript.vim script instead.
+    disable = { 'javascript' },
+  },
   textobjects = {
     select = {
       enable = true,
