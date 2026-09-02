@@ -2,7 +2,7 @@
 set -e
 
 # Constants
-APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/v0.11.2/nvim-linux-x86_64.appimage"
+APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-x86_64.appimage"
 LOCAL_BIN="$HOME/.local/bin"
 NVIM_APPIMAGE="$LOCAL_BIN/nvim-linux-x86_64.appimage"
 NVIM_EXTRACTED="$HOME/.local/nvim-app"
