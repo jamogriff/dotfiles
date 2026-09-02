@@ -9,22 +9,24 @@ scripts below **in order**.
 ### Desktop Computer
 
 1. `init/install-packages` — apt-installs the [System Prereq's](#system-prereqs).
-2. `init/desktop/install-terminal` — installs the Kitty terminal emulator.
-3. `init/desktop/install-config` — installs fonts, symlinks config files (kitty, tmux, nvim, `.secrets`), and swaps the Escape/Caps Lock keys.
+2. `init/install-zsh` — installs zsh + oh-my-zsh and switches your default shell to zsh.
+3. `init/desktop/install-terminal` — installs the Kitty terminal emulator.
+4. `init/desktop/install-config` — installs fonts, symlinks config files (kitty, tmux, nvim, `.secrets`), and swaps the Escape/Caps Lock keys.
    (If you want to keep your Caps Lock key: `gsettings reset org.gnome.desktop.input-sources xkb-options`.)
-4. `install-nvim` — installs the Neovim binary/AppImage.
-5. Launch `nvim`. On first run it bootstraps `lazy.nvim`, which installs every plugin, and
+5. `install-nvim` — installs the Neovim binary/AppImage.
+6. Launch `nvim`. On first run it bootstraps `lazy.nvim`, which installs every plugin, and
    `mason.nvim` installs the configured language servers automatically. See
    [Using lazy.nvim and mason.nvim](#using-lazynvim-and-masonnvim) below for day-to-day use.
 
 ### TTY Computer
 
 1. `init/install-packages`
-2. `init/tty/install-config` — installs TMUX config, scripts and the nvim config symlink
+2. `init/install-zsh`
+3. `init/tty/install-config` — installs TMUX config, scripts and the nvim config symlink
    (also records the `tty` profile so Neovim skips desktop-only plugins — see
    `nvim/lua/user/profile.lua`).
-3. `install-nvim`
-4. Launch `nvim` (same first-run plugin/LSP bootstrap as the desktop path above).
+4. `install-nvim`
+5. Launch `nvim` (same first-run plugin/LSP bootstrap as the desktop path above).
 
 **Notes:**
 - You'll likely need to set `export TERM=xterm-256color` in you `~/.zshrc`file.
