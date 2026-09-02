@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -e
+
+# Idempotent: safe to re-run. Skips the oh-my-zsh install if ~/.oh-my-zsh already
+# exists (its own installer isn't idempotent — it errors out if that dir is there),
+# and skips the shell switch if zsh is already the default shell.
+
+if ! command -v zsh >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y zsh
+fi
+
+ZSH_BIN="$(command -v zsh)"
+
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  # KEEP_ZSHRC: never let the installer replace this repo's ~/.zshrc.
+  # RUNZSH=no/CHSH=no: this script handles the shell switch itself, below.
+  KEEP_ZSHRC=yes RUNZSH=no CHSH=no sh -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+  echo "oh-my-zsh already installed at ~/.oh-my-zsh, skipping."
+fi
+
+CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+if [ "$CURRENT_SHELL" != "$ZSH_BIN" ]; then
+  if grep -qx "$ZSH_BIN" /etc/shells; then
+    sudo chsh -s "$ZSH_BIN" "$USER"
+  else
+    echo "warning: $ZSH_BIN not listed in /etc/shells; add it, then re-run this script." >&2
+    exit 1
+  fi
+else
+  echo "Default shell is already $ZSH_BIN, skipping."
+fi
