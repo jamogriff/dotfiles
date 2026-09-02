@@ -8,3 +8,16 @@ PACKAGES=(xclip tmux curl unzip fzf ripgrep)
 
 sudo apt-get update
 sudo apt-get install -y "${PACKAGES[@]}"
+
+# Language runtime version managers, so mason.nvim has a Node/Ruby/Python to install
+# LSPs with. Each installer is self-idempotent (safe to re-run; updates an existing
+# install in place) and wires itself into your shell rc file automatically.
+
+# nvm (Node) — https://github.com/nvm-sh/nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
+
+# rbenv + ruby-build (Ruby) — https://rbenv.org
+curl -fsSL https://rbenv.org/install.sh | bash
+
+# uv (Python) — https://docs.astral.sh/uv
+curl -LsSf https://astral.sh/uv/0.12.9/install.sh | sh
