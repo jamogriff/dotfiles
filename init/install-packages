@@ -9,9 +9,10 @@ PACKAGES=(xclip tmux curl unzip fzf ripgrep)
 sudo apt-get update
 sudo apt-get install -y "${PACKAGES[@]}"
 
-# Language runtime version managers, so mason.nvim has a Node/Ruby/Python to install
-# LSPs with. Each installer is self-idempotent (safe to re-run; updates an existing
-# install in place) and wires itself into your shell rc file automatically.
+# Language runtime version managers, so mason.nvim has a Node/Ruby/Python/PHP to
+# install LSPs with. Each installer is self-idempotent (safe to re-run; updates an
+# existing install in place); all but phpenv also wire themselves into your shell rc
+# file automatically, so phpenv gets that done explicitly below instead.
 
 # nvm (Node) — https://github.com/nvm-sh/nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
@@ -21,3 +22,13 @@ curl -fsSL https://rbenv.org/install.sh | bash
 
 # uv (Python) — https://docs.astral.sh/uv
 curl -LsSf https://astral.sh/uv/0.12.9/install.sh | sh
+
+# phpenv + php-build (PHP) — https://github.com/phpenv/phpenv-installer
+curl -L https://raw.githubusercontent.com/phpenv/phpenv-installer/master/bin/phpenv-installer | bash
+if ! grep -qF 'phpenv init -' "$HOME/.zshrc" 2>/dev/null; then
+  cat >>"$HOME/.zshrc" <<'EOF'
+
+export PATH="$HOME/.phpenv/bin:$PATH"
+eval "$(phpenv init -)"
+EOF
+fi
