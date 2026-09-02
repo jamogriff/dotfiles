@@ -44,7 +44,7 @@ end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
 
-require('lspconfig').intelephense.setup({
+vim.lsp.config('intelephense', {
   init_options = {
     licenceKey = os.getenv('INTELEPHENSE_LICENSE')
   },
@@ -55,6 +55,7 @@ require('lspconfig').intelephense.setup({
   end,
   capabilities = capabilities,
 })
+vim.lsp.enable('intelephense')
 
 vim.lsp.enable('marksman')
 vim.lsp.enable('zuban')

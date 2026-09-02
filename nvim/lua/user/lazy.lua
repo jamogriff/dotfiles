@@ -17,6 +17,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup(require('user.plugins'), {
+  defaults = { version = '*' }, -- latest stable semver tag where a plugin publishes one
   install = { colorscheme = { 'habamax' } },
   checker = { enabled = true },
 })
