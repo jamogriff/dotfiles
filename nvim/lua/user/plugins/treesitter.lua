@@ -25,7 +25,4 @@ config.setup({
       },
     },
   },
-  context_commentstring = {
-    enable = true,
-  },
 })
