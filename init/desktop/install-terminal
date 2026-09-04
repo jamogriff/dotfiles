@@ -6,6 +6,7 @@ rm -rf $HOME/.config/kitty # install config adds this file
 rm -rf $HOME/.local/kitty.app
 curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
 sudo ln -s $HOME/.local/kitty.app/bin/kitty /usr/local/bin/kitty
+mkdir -p $HOME/.local/share/applications
 cp $HOME/.local/kitty.app/share/applications/kitty.desktop $HOME/.local/share/applications/
 # If you want to open text files and images in kitty via your file manager also add the kitty-open.desktop file
 cp $HOME/.local/kitty.app/share/applications/kitty-open.desktop $HOME/.local/share/applications/
