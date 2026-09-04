@@ -105,3 +105,6 @@ need to place your license key in `~/.secrets/` (as `INTELEPHENSE_LICENSE`).
   `vscode-languageserver-protocol` dependency. Revisit once upstream publishes a fix, or try
   the Go-based `sqls` instead (needs a Go toolchain, which this repo doesn't set up).
 
+## Misc
+- I switch Escape and Caps Lock keys. On GNOME you would run the following to do this programatically, but not currently using GNOME so not including it here: `gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"`
+
