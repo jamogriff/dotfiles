@@ -11,11 +11,14 @@ setup() {
   use_mocks
 }
 
-@test "symlinks kitty, tmux, nvim and scripts/t into HOME" {
+@test "symlinks gitconfig, kitty, tmux, nvim and scripts/t into HOME" {
   run bash "$REPO_DIR/init/desktop/install-config"
   [ "$status" -eq 0 ]
 
   # `-L` tests "is this path a symlink"; `readlink` prints what it points at.
+  [ -L "$HOME/.gitconfig" ]
+  [ "$HOME/.gitconfig" -ef "$REPO_DIR/.gitconfig" ]
+
   [ -L "$HOME/.config/kitty" ]
   [ "$HOME/.config/kitty" -ef "$REPO_DIR/kitty" ]
 

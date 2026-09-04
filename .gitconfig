@@ -1,0 +1,12 @@
+[user]
+    name = Jamison Griffith
+    email = jamison.griffith@gmail.com
+[init]
+    defaultBranch = main
+[core]
+    editor = nvim
+[pull]
+    rebase = false
+[rerere]
+    enabled = true
+    autoUpdate = true

@@ -3,6 +3,9 @@
 INIT_SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 DOTFILES="${INIT_SCRIPT_DIR}/../.."
 
+rm $HOME/.gitconfig
+ln -s $DOTFILES/.gitconfig $HOME/.gitconfig
+
 # Ensure there is a config directory
 [ -d "$HOME/.config" ] || mkdir -p "$HOME/.config"
 
