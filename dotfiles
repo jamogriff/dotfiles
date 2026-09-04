@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+#
+# dotfiles — single entrypoint for every setup script in this repo.
+#
+# Usage: dotfiles <command> [target]
+#
+# Run with no arguments, or "help", to see the command list.
+
+# `set` changes shell behavior for the rest of this script (not just one line).
+#   -e:          exit immediately if any command returns non-zero. Without this,
+#                bash just shrugs off a failed command and keeps going.
+#   -u:          treat use of an unset variable as an error instead of silently
+#                expanding it to an empty string. Catches typos in var names.
+#   -o pipefail: in a pipeline like `a | b`, fail the whole pipeline if EITHER
+#                command fails, not only if the last one does.
+set -euo pipefail
+
+# `$(...)` is command substitution: run the command inside, capture whatever it
+# prints to stdout, and use that as a string.
+# `${BASH_SOURCE[0]}` is this script's own path. We use it instead of `$0` because
+# it still resolves correctly if this file is ever `source`d from another script.
+# `dirname` strips the filename, leaving just the containing directory.
+# `cd <dir> && pwd` converts a possibly-relative path into a clean absolute one.
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+
+usage() {
+  # A heredoc: everything between `<<EOF` and the closing `EOF` is fed to `cat`
+  # as literal text. Because EOF isn't quoted here (compare `<<'EOF'`), any
+  # $variables inside would still be expanded — there aren't any, so it's just
+  # a convenient way to write a multi-line block without quoting every line.
+  cat <<EOF
+Usage: dotfiles <command> [target]
+
+Commands:
+  install packages        apt-install prereqs + nvm/rbenv/uv/phpenv
+  install zsh             install zsh + oh-my-zsh, switch default shell
+  install terminal        install the Kitty terminal (desktop only)
+  install config <target> symlink dotfiles; target is 'desktop' or 'tty'
+  install nvim            install the Neovim AppImage
+  setup <target>          run the full sequence for 'desktop' or 'tty'
+  help                    show this message
+
+Examples:
+  dotfiles setup desktop
+  dotfiles install nvim
+EOF
+}
+
+# --- one function per real script already in this repo ---
+# Each just shells out to the existing file. Wrapping it in a function (instead
+# of calling the script inline everywhere it's needed) means the path is only
+# written once, and `setup` below can reuse these same functions.
+
+install_packages() {
+  echo "==> Installing packages + language version managers"
+  # `bash "path"` runs that file as a fresh bash process. The double quotes
+  # around the variable stop word-splitting from breaking on any spaces in the
+  # path (a defensive habit — quote every variable expansion unless you have a
+  # specific reason not to).
+  bash "$DOTFILES_DIR/init/install-packages"
+}
+
+install_zsh() {
+  echo "==> Installing zsh + oh-my-zsh"
+  bash "$DOTFILES_DIR/init/install-zsh"
+}
+
+install_terminal() {
+  echo "==> Installing Kitty terminal (desktop only)"
+  bash "$DOTFILES_DIR/init/desktop/install-terminal"
+}
+
+# This one takes an argument instead of being hardcoded, because the same
+# action — "symlink the configs" — has two different source scripts depending
+# on whether you're setting up a desktop or a TTY machine.
+install_config() {
+  # `local` scopes this variable to inside the function, instead of leaking
+  # into the global scope like a plain assignment would.
+  local target="$1"   # $1 = this function's first argument
+  case "$target" in
+    desktop) bash "$DOTFILES_DIR/init/desktop/install-config" ;;
+    tty)     bash "$DOTFILES_DIR/init/tty/install-config" ;;
+    *)
+      # `>&2` redirects this line to stderr instead of stdout. Convention: error
+      # messages go to stderr so they don't get mixed into a script's real output.
+      echo "install config: target must be 'desktop' or 'tty', got '$target'" >&2
+      # `return` exits just this function (and its exit code, since -e is set,
+      # will also stop the whole script) — different from `exit`, which would
+      # quit the entire script even from inside a deeply nested call.
+      return 1
+      ;;
+  esac
+}
+
+install_nvim() {
+  echo "==> Installing Neovim"
+  bash "$DOTFILES_DIR/install-nvim"
+}
+
+# Runs the full README sequence for one profile, in order. Because `set -e` is
+# on globally, if any step here fails, execution stops immediately rather than
+# ploughing ahead with a half-configured machine.
+setup() {
+  local target="$1"
+  # Validate before doing anything, so a typo'd target fails fast instead of
+  # running real installs first and only then discovering it can't proceed.
+  case "$target" in
+    desktop|tty) ;;
+    *)
+      echo "setup: target must be 'desktop' or 'tty', got '$target'" >&2
+      return 1
+      ;;
+  esac
+
+  install_packages
+  install_zsh
+  case "$target" in
+    desktop)
+      install_terminal
+      install_config desktop
+      ;;
+    tty)
+      install_config tty
+      ;;
+  esac
+  install_nvim
+  echo "==> $target setup complete. Launch nvim to bootstrap plugins/LSPs."
+}
+
+# --- argument parsing / dispatch ---
+
+# `${1:-help}` is parameter expansion with a default: use $1 if a first argument
+# was actually passed, otherwise substitute the literal string "help". This is
+# what lets `./dotfiles` with zero arguments work at all under `set -u` — without
+# the `:-` fallback, referencing an unset $1 would be a hard error.
+cmd="${1:-help}"
+sub="${2:-}"
+
+# `case` matches $cmd against each pattern top to bottom. `;;` ends a branch,
+# like `break` in a C-style switch. `*)` is the catch-all, matched if nothing
+# else did — bash's equivalent of `default:`.
+case "$cmd" in
+  install)
+    # A nested case dispatches on the *second* word, but only inside this branch.
+    case "$sub" in
+      packages) install_packages ;;
+      zsh)      install_zsh ;;
+      terminal) install_terminal ;;
+      config)
+        # `$3` is the third command-line argument, e.g. in
+        # `dotfiles install config desktop`, $3 is "desktop".
+        # `${3:-}` again supplies "" as a default so `set -u` doesn't choke if
+        # it's missing — install_config's own case statement then reports the
+        # more specific error for an empty/unrecognized target.
+        install_config "${3:-}"
+        ;;
+      nvim)     install_nvim ;;
+      *)
+        echo "Unknown install target: '$sub'" >&2
+        usage
+        exit 1
+        ;;
+    esac
+    ;;
+  setup)
+    setup "$sub"
+    ;;
+  help|-h|--help)
+    # Multiple patterns separated by `|` in one branch — matches any of them.
+    usage
+    ;;
+  *)
+    echo "Unknown command: '$cmd'" >&2
+    usage
+    exit 1
+    ;;
+esac
