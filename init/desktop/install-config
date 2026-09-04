@@ -25,9 +25,6 @@ rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
 echo desktop > "$HOME/.dotfiles-profile"
 
-# Switch Escape and Caps Lock
-gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"
-
 # Handle uncommitted secrets file
 if [ -f $DOTFILES/.secrets ]; then
     rm -f $HOME/.local/.secrets
