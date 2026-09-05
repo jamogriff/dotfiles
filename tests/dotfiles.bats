@@ -39,10 +39,49 @@ setup() {
   [[ "$output" == *"Unknown bootstrap target: 'bogus'"* ]]
 }
 
-@test "install config with a bad target exits 1" {
-  run "$DISPATCHER" install config bogus
+@test "install config reads the profile from ~/.dotfiles-profile" {
+  fake_home
+  echo tty > "$HOME/.dotfiles-profile"
+
+  DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fake tty config installed"* ]]
+  [[ "$output" != *"fake desktop config installed"* ]]
+
+  echo desktop > "$HOME/.dotfiles-profile"
+
+  DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fake desktop config installed"* ]]
+  [[ "$output" != *"fake tty config installed"* ]]
+}
+
+@test "install config exits 1 when the machine has no profile marker" {
+  fake_home
+
+  DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config
   [ "$status" -eq 1 ]
-  [[ "$output" == *"target must be 'desktop' or 'tty'"* ]]
+  [[ "$output" == *"hasn't been bootstrapped yet"* ]]
+}
+
+@test "install config exits 1 on an unrecognized profile marker" {
+  fake_home
+  echo bogus > "$HOME/.dotfiles-profile"
+
+  DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"isn't 'desktop' or 'tty'"* ]]
+}
+
+@test "install config rejects a target argument rather than ignoring it" {
+  fake_home
+  echo tty > "$HOME/.dotfiles-profile"
+
+  DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config desktop
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"takes no target"* ]]
+  # And nothing was applied on the way out.
+  [[ "$output" != *"fake tty config installed"* ]]
 }
 
 @test "bootstrap tty does not run desktop-only steps (via fixture override)" {
@@ -72,12 +111,11 @@ setup() {
   [[ "$output" == *"desktop bootstrap complete"* ]]
 }
 
-@test "bootstrap languages routes to bootstrap-languages on its own (via fixture override)" {
+@test "bootstrap languages is not a command; it only runs inside bootstrap desktop" {
   DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" bootstrap languages
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"fake languages bootstrapped"* ]]
-  # And nothing else ran -- this is meant to be callable on its own.
-  [[ "$output" != *"fake packages installed"* ]]
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Unknown bootstrap target: 'languages'"* ]]
+  [[ "$output" != *"fake languages bootstrapped"* ]]
 }
 
 @test "install nvim routes to the real script name (via fixture override)" {

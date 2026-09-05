@@ -33,30 +33,40 @@ On a fresh machine, run one bootstrap command:
 
 `./dotfiles help` lists every command, split into two families:
 
-- **`bootstrap`** — one-time (or rare) setup: `bootstrap desktop`/`bootstrap tty` run the full
-  sequence for that profile, in order. `bootstrap languages` is the desktop-only language-runtime
-  install on its own — pulled out of the main sequence specifically so bumping a pinned version
-  later (see [System Prereq's](#system-prereqs)) doesn't mean re-running everything else too.
-- **`install`** — piecewise and idempotent: re-run `install config desktop`, `install zsh`, etc.
+- **`bootstrap`** — one-time setup for a fresh machine: `bootstrap desktop`/`bootstrap tty` run
+  the full sequence for that profile, in order. There's nothing to re-run here afterward; the
+  desktop language-runtime step in particular is fresh-install only (see
+  [System Prereq's](#system-prereqs)).
+- **`install`** — piecewise and idempotent: re-run `install config`, `install nvim`, etc.
   any time you change something in this repo and want just that piece re-applied, without
-  repeating the one-time bootstrap steps.
+  repeating the one-time bootstrap steps. `install config` takes no profile argument — it
+  reads `~/.dotfiles-profile`, the marker the bootstrap wrote, so it always re-applies the
+  profile this machine actually has. Package and zsh setup aren't in this family —
+  they only run as part of `bootstrap`, since re-running them by hand either does nothing
+  or risks re-tripping install-time branching (oh-my-zsh, the default-shell switch).
 
-Each command maps to one script under `setup/` (or `install-nvim` → `setup/nvim`), named to match:
-`setup/packages` and `setup/zsh` are shared by both profiles; everything under `setup/desktop/` —
-including `bootstrap-languages` — only ever runs on desktop; `setup/tty/config` is the tty
-equivalent of `setup/desktop/config`.
+Each command maps to one script under `setup/`, named to match: `setup/packages` and `setup/zsh`
+are shared by both profiles (both bootstrap-only); everything under `setup/desktop/` — including
+`bootstrap-languages` — only ever runs on desktop; `setup/tty/config` is the tty equivalent of
+`setup/desktop/config`.
 
 ## System Prereq's
 `setup/packages` apt-installs a small set of OS-level packages shared by both profiles (tmux,
 fzf, ripgrep, etc.) — the same list runs on TTY.
 
-Everything language/LSP-related is desktop-only, installed by `setup/desktop/bootstrap-languages`:
-[nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby), and
-[uv](https://docs.astral.sh/uv) (Python), plus the pinned Node/Ruby versions set by
-`NODE_VERSION`/`RUBY_VERSION` at the top of that script (made default via `nvm alias
-default`/`rbenv global`). Python is the exception: only the `uv` tool itself gets installed, not
-a Python version, so you'll still need to run `uv python install` yourself before mason can use
-`zuban`.
+Everything language/LSP-related is desktop-only, installed by `setup/desktop/bootstrap-languages`
+as part of `bootstrap desktop`: [nvm](https://github.com/nvm-sh/nvm) (Node),
+[rbenv](https://rbenv.org) (Ruby), and [uv](https://docs.astral.sh/uv) (Python), plus the pinned
+Node/Ruby versions set by `NODE_VERSION`/`RUBY_VERSION` at the top of that script (made default
+via `nvm alias default`/`rbenv global`). Python is the exception: only the `uv` tool itself gets
+installed, not a Python version, so you'll still need to run `uv python install` yourself before
+mason can use `zuban`.
+
+That step runs once, on a fresh machine. To install or switch a language version afterward, use
+the version managers directly (`nvm install 26 && nvm alias default 26`, `rbenv install 3.4.1 &&
+rbenv global 3.4.1`, `uv python install`) — there's no `dotfiles` command for it. Bumping
+`NODE_VERSION`/`RUBY_VERSION` in the script only changes what the *next* fresh machine gets, so
+it's worth doing anyway once you've settled on a newer version.
 
 Language servers are installed by Neovim's `mason.nvim` and it manages them automatically (see
 `nvim/lua/user/plugins.lua`'s `ensure_installed` list) — but that whole block, along with
