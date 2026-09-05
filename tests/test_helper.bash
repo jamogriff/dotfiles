@@ -27,3 +27,24 @@ use_mocks() {
   export MOCK_LOG="$BATS_TEST_TMPDIR/mock.log"
   : > "$MOCK_LOG"
 }
+
+# For the one test that needs to prove "zsh isn't installed yet" (install-zsh's
+# `if ! command -v zsh` branch): just prepending mocks isn't enough, since the
+# real system zsh -- if the machine running these tests already has one, e.g.
+# because you're reading this in a zsh prompt -- is still reachable further
+# down the inherited $PATH. This builds a *replacement* PATH from scratch:
+# symlinks to a fixed allowlist of real tools the script actually needs, plus
+# the mocks, and nothing else -- so zsh is unreachable regardless of where the
+# host happens to keep it, rather than relying on it coincidentally being
+# absent from whatever machine happens to run the suite.
+path_without_zsh() {
+  local shimdir="$BATS_TEST_TMPDIR/shims-no-zsh"
+  mkdir -p "$shimdir"
+  local tool
+  for tool in bash sh grep sed cat mkdir rm ln touch basename dirname printf cut chmod; do
+    local real
+    real="$(command -v "$tool")" || continue
+    ln -sf "$real" "$shimdir/$tool"
+  done
+  echo "$shimdir:$MOCK_BIN_DIR:$REPO_DIR/tests/mocks"
+}
