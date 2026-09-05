@@ -97,38 +97,6 @@ local plugins = {
     end,
   },
   {
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      'folke/lsp-colors.nvim',
-      { 'mason-org/mason.nvim', opts = {} },
-      {
-        'mason-org/mason-lspconfig.nvim',
-        opts = {
-          -- These are lspconfig server names (mason-lspconfig maps them to
-          -- mason package names internally), not mason package names.
-          ensure_installed = {
-            'intelephense',
-            'marksman',
-            'zuban',
-            'html',
-            'cssls',
-            'ts_ls',
-            'ruby_lsp',
-            -- 'sqlls' omitted: sql-language-server@1.7.1 (latest) crashes on
-            -- startup here (ERR_PACKAGE_PATH_NOT_EXPORTED, a bug in its own
-            -- vscode-languageserver-protocol dependency) — see README TODO.
-          },
-          -- lspconfig.lua calls vim.lsp.enable() itself (intelephense needs a
-          -- custom vim.lsp.config() first); mason only owns installation here.
-          automatic_enable = false,
-        },
-      },
-    },
-    config = function()
-      require('user.plugins.lspconfig')
-    end,
-  },
-  {
     'hrsh7th/nvim-cmp',
     dependencies = {
       'hrsh7th/cmp-buffer',
@@ -216,6 +184,43 @@ local plugins = {
 --]]
 if not profile.is_tty() then
   vim.list_extend(plugins, {
+    {
+      -- Desktop-only: every LSP here needs a language runtime (Node, Ruby,
+      -- or Python) that setup/desktop/bootstrap-languages installs and a TTY
+      -- machine never gets (see setup/packages's comment on why). Loading
+      -- this on tty would have mason try to npm/gem install servers against
+      -- runtimes that were never bootstrapped, and fail.
+      'neovim/nvim-lspconfig',
+      dependencies = {
+        'folke/lsp-colors.nvim',
+        { 'mason-org/mason.nvim', opts = {} },
+        {
+          'mason-org/mason-lspconfig.nvim',
+          opts = {
+            -- These are lspconfig server names (mason-lspconfig maps them to
+            -- mason package names internally), not mason package names.
+            ensure_installed = {
+              'intelephense',
+              'marksman',
+              'zuban',
+              'html',
+              'cssls',
+              'ts_ls',
+              'ruby_lsp',
+              -- 'sqlls' omitted: sql-language-server@1.7.1 (latest) crashes on
+              -- startup here (ERR_PACKAGE_PATH_NOT_EXPORTED, a bug in its own
+              -- vscode-languageserver-protocol dependency) — see README TODO.
+            },
+            -- lspconfig.lua calls vim.lsp.enable() itself (intelephense needs a
+            -- custom vim.lsp.config() first); mason only owns installation here.
+            automatic_enable = false,
+          },
+        },
+      },
+      config = function()
+        require('user.plugins.lspconfig')
+      end,
+    },
     {
       'rebelot/kanagawa.nvim',
       lazy = false,

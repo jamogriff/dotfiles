@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# install-zsh's shell-switch logic isn't something a unit test should exercise
+# for real -- it reads/writes actual account state (passwd, /etc/shells) that
+# doesn't exist safely in a sandbox. Rather than fake all of that, this mock
+# always reports the current shell as whatever `zsh` resolves to right now, so
+# the script's "already the default, skipping" branch fires every time and
+# the chsh call underneath it is never reached. The parts of install-zsh worth
+# testing -- oh-my-zsh install/idempotency, .zshrc content -- happen earlier.
+echo "user:x:1000:1000::/home/user:$(command -v zsh)"

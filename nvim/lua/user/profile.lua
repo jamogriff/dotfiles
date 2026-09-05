@@ -1,6 +1,6 @@
 -- Which install profile this machine was set up with: 'desktop' (full plugin set)
--- or 'tty' (lighter set for a bare Linux console). Set by init/desktop/install-config
--- and init/tty/install-config via ~/.dotfiles-profile.
+-- or 'tty' (lighter set for a bare Linux console). Set by setup/desktop/config
+-- and setup/tty/config via ~/.dotfiles-profile.
 local M = {}
 
 local profile_file = os.getenv('HOME') .. '/.dotfiles-profile'

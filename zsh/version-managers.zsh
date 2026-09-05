@@ -1,15 +1,15 @@
 # Version managers + ~/.local/bin, for zsh.
 #
-# The nvm/rbenv/uv installers in init/install-packages each append their own init
-# snippet to a single rc file that they auto-detect. Because `dotfiles setup` runs
-# under bash, they all detect bash and write to ~/.bashrc — so none of them are
-# available in zsh, which is the shell install-zsh then makes the default.
+# The nvm/rbenv/uv installers in setup/desktop/bootstrap-languages each append their own
+# init snippet to a single rc file that they auto-detect. Because `dotfiles bootstrap`
+# runs under bash, they all detect bash and write to ~/.bashrc — so none of them are
+# available in zsh, which is the shell setup/zsh then makes the default.
 #
 # Steering the installers at zsh instead is unreliable: rbenv's installer derives
 # the shell from `ps -p $PPID` and overwrites anything you pass it, and nvm honors
 # $PROFILE only if that file already exists — which ~/.zshrc doesn't yet, since
-# install-packages runs before install-zsh. So this file re-declares the same
-# initialization for zsh, and install-config symlinks it into $ZSH_CUSTOM.
+# setup/desktop/bootstrap-languages runs before setup/zsh. So this file re-declares the
+# same initialization for zsh, and setup/desktop/config symlinks it into $ZSH_CUSTOM.
 #
 # Keep this in sync with whatever the installers write into ~/.bashrc.
 

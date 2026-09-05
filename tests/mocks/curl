@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Every call site in install-packages/install-zsh pipes curl's stdout straight
+# into `bash`/`sh` (the nvm/rbenv/uv/oh-my-zsh installers). Printing nothing
+# means that shell gets empty input and exits 0 immediately -- a real network
+# fetch never happens, and the actual "did this run" question is answered by
+# fixtures (nvm.sh/rbenv already being in place) rather than by what curl did.
+echo "curl $*" >> "$MOCK_LOG"

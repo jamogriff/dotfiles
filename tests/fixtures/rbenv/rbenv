@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Fake rbenv for tests. install-packages calls this by absolute path
+# ($HOME/.rbenv/bin/rbenv), so unlike nvm.sh this has to be an executable, not
+# a sourced function. A version counts as "installed" if a marker file for it
+# exists under $HOME/.rbenv/versions/ -- mirroring what `rbenv versions --bare`
+# actually lists on a real install.
+ROOT="$HOME/.rbenv"
+case "$1" in
+  versions)
+    mkdir -p "$ROOT/versions"
+    ls "$ROOT/versions" 2>/dev/null
+    ;;
+  install)
+    mkdir -p "$ROOT/versions"
+    touch "$ROOT/versions/$2"
+    echo "rbenv install $2" >> "$MOCK_LOG"
+    ;;
+  global)
+    echo "rbenv global $2" >> "$MOCK_LOG"
+    ;;
+esac

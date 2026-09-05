@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Stand-in for the real apt-get: never touch the system package DB in a test.
+echo "apt-get $*" >> "$MOCK_LOG"
+
+# install-zsh immediately does `command -v zsh` after asking apt-get to
+# install it -- a real apt-get would have put a zsh binary on PATH by then,
+# but this mock does nothing on its own, so it fakes that one side effect
+# specifically. Nothing else install-packages/install-zsh installs is ever
+# checked for afterward, so this is the only package that needs it.
+for arg in "$@"; do
+  if [ "$arg" = "zsh" ]; then
+    printf '#!/usr/bin/env bash\n' > "$MOCK_BIN_DIR/zsh"
+    chmod +x "$MOCK_BIN_DIR/zsh"
+  fi
+done

@@ -10,16 +10,19 @@ if ! command -v zsh >/dev/null 2>&1; then
   sudo apt-get install -y zsh
 fi
 
-ZSH_BIN="$(command -v zsh)"
+ZSH_BIN="$(command -v zsh)" || {
+  echo "zsh isn't on PATH even after attempting to install it; something above failed silently. Check the apt-get output." >&2
+  exit 1
+}
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   # KEEP_ZSHRC: leave any existing ~/.zshrc completely alone. Without this the
   # installer *moves* it to ~/.zshrc.pre-oh-my-zsh and drops its own template in
-  # place — and since install-packages runs before this script, that file already
+  # place — and since setup/packages runs before this script, that file already
   # holds the nvm/rbenv/uv init lines those installers appended. Losing them is
   # silent: zsh doesn't read ~/.profile, so those tools would simply vanish from
   # interactive zsh. (Dropping the flag would also make the installer stop on a
-  # [Y/n] overwrite prompt, hanging an unattended `dotfiles setup`.)
+  # [Y/n] overwrite prompt, hanging an unattended `dotfiles bootstrap`.)
   #
   # The tradeoff is that the installer then never writes the lines that actually
   # *load* oh-my-zsh, so we append them ourselves just below.
@@ -52,7 +55,7 @@ else
   echo "oh-my-zsh already sourced from ~/.zshrc, skipping."
 fi
 
-# Source the .secrets symlink install-config sets up at ~/.local/.secrets (env vars
+# Source the .secrets symlink setup/desktop/config sets up at ~/.local/.secrets (env vars
 # like INTELEPHENSE_LICENSE). Goes in last so anything exported there wins over
 # whatever the version managers or oh-my-zsh put on PATH above it.
 if ! grep -qF '.local/.secrets' "$HOME/.zshrc" 2>/dev/null; then

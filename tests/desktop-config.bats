@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# Exercises the REAL init/desktop/install-config script end to end. Unlike
+# Exercises the REAL setup/desktop/config script end to end. Unlike
 # install-packages/install-nvim it makes no network calls and installs no
 # packages -- just symlinks, a font unzip, and one gsettings call -- so it's
 # safe to run for real against a throwaway $HOME instead of faking it out.
@@ -12,7 +12,7 @@ setup() {
 }
 
 @test "symlinks gitconfig, kitty, tmux, nvim and scripts/t into HOME" {
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
 
   # `-L` tests "is this path a symlink"; `readlink` prints what it points at.
@@ -33,19 +33,19 @@ setup() {
 }
 
 @test "records the 'desktop' profile" {
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
   [ "$(cat "$HOME/.dotfiles-profile")" = "desktop" ]
 }
 
 @test "warns when .secrets is missing" {
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [[ "$output" == *"WARNING: Add .secrets file"* ]]
 }
 
 @test "symlinks .secrets when present" {
   touch "$REPO_DIR/.secrets"
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   rm -f "$REPO_DIR/.secrets"   # clean up so we don't leave repo state dirty
 
   [ "$status" -eq 0 ]
@@ -54,7 +54,7 @@ setup() {
 
 @test "symlinks every zsh/*.zsh into ZSH_CUSTOM when oh-my-zsh is installed" {
   mkdir -p "$HOME/.oh-my-zsh/custom"
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
 
   # Every file in the repo's zsh/ dir should land in custom/ as a symlink back
@@ -70,13 +70,13 @@ setup() {
   mkdir -p "$HOME/.oh-my-zsh/custom"
   ln -s /nonexistent/aliases.zsh "$HOME/.oh-my-zsh/custom/aliases.zsh"
 
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
   [ "$HOME/.oh-my-zsh/custom/aliases.zsh" -ef "$REPO_DIR/zsh/aliases.zsh" ]
 }
 
 @test "skips zsh custom symlinks, and does not create ~/.oh-my-zsh, when it is absent" {
-  run bash "$REPO_DIR/init/desktop/install-config"
+  run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
   [[ "$output" == *"WARNING: ~/.oh-my-zsh not found"* ]]
 
