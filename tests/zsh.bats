@@ -15,7 +15,7 @@ setup() {
 }
 
 @test "installs the zsh package when not already on PATH" {
-  run bash "$REPO_DIR/setup/zsh"
+  PATH="$(path_without_zsh)" run bash "$REPO_DIR/setup/zsh"
   [ "$status" -eq 0 ]
   grep -q "apt-get install -y zsh" "$MOCK_LOG"
 }
