@@ -7,12 +7,13 @@ set -e
 # mason/lspconfig entirely on tty) -- a lightweight server has no use for a C
 # toolchain and a from-source Ruby build.
 #
-# This is a *bootstrap* step, not a piecewise `install` one: re-running it
-# means recompiling Ruby if the pinned version below changed (several minutes,
-# vs. a quick config tweak), so it only runs as part of `dotfiles bootstrap
-# desktop`. To pick up a version bump later without repeating the whole
-# bootstrap, edit NODE_VERSION/RUBY_VERSION below and run
-# `dotfiles bootstrap languages` on its own.
+# Fresh-install only: this runs as part of `dotfiles bootstrap desktop` and is
+# not reachable as a command of its own. It exists to get a brand-new machine
+# from "no runtimes at all" to "mason has something to install LSPs against";
+# once that's true, adding or switching a language version is nvm/rbenv/uv's
+# own job (`nvm install`, `rbenv install`, `uv python install`), which they do
+# better than a wrapper here would. The pins below are what a *future* fresh
+# machine gets -- bumping one doesn't change a machine that's already set up.
 
 # ruby-build compiles Ruby from source rather than downloading a binary, so rbenv
 # needs a C toolchain plus the headers Ruby links against. Miss one and `rbenv
@@ -26,7 +27,8 @@ RUBY_BUILD_DEPS=(
 )
 
 # Language runtimes to install. Pinned rather than floating so every machine set up
-# from this repo lands on the same versions.
+# from this repo starts on the same versions (and then diverges as you install
+# newer ones with nvm/rbenv directly -- that's expected).
 NODE_VERSION=24        # nvm resolves this to the latest 24.x
 RUBY_VERSION=3.3.5
 
