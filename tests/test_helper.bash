@@ -16,7 +16,14 @@ fake_home() {
 # either destructive (apt-get, sudo) or environment-specific (gsettings,
 # chsh) resolve to no-op stand-ins instead of the real thing.
 use_mocks() {
-  export PATH="$REPO_DIR/tests/mocks:$PATH"
+  # MOCK_BIN_DIR is scratch space *mocks themselves* can write into at test
+  # run time (e.g. apt-get faking up a zsh binary once "installed") -- unlike
+  # tests/mocks/, which is static, checked-in, and shared across every test.
+  # It's prepended ahead of tests/mocks/ so anything a mock plants here is
+  # found first.
+  export MOCK_BIN_DIR="$BATS_TEST_TMPDIR/mockbin"
+  mkdir -p "$MOCK_BIN_DIR"
+  export PATH="$MOCK_BIN_DIR:$REPO_DIR/tests/mocks:$PATH"
   export MOCK_LOG="$BATS_TEST_TMPDIR/mock.log"
   : > "$MOCK_LOG"
 }

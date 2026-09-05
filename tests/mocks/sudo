@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The scripts under test call plain apt-get/chsh via sudo. There's no real
+# root in CI (and we don't want one), so this just runs the command directly
+# -- whatever it resolves to on $PATH is already one of our other mocks.
+echo "sudo $*" >> "$MOCK_LOG"
+exec "$@"

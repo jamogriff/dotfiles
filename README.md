@@ -3,36 +3,66 @@ $HOME sweet $HOME (inspired by Jess Archer)
 
 ## Get Started
 
-These dotfiles provide setup for desktop and TTY computers (**Linux only!**). On a fresh machine, run the
-scripts below **in order**.
+These dotfiles provide two profiles (**Linux only!**), scoped very differently on purpose:
+
+- **Desktop** — a full dev environment. Every language runtime, LSP, and editor plugin in this
+  repo is here for writing code, so desktop gets all of it.
+- **TTY** — a minimal profile for servers: just zsh and nvim as a plain editor, no language
+  runtimes, no LSPs, no GUI terminal. See [Script Layout](#script-layout) below for why that
+  split runs all the way down into which scripts even exist for each profile.
+
+On a fresh machine, run one bootstrap command:
 
 ### Desktop Computer
 
-1. `./dotfiles setup desktop` — apt-installs the [System Prereq's](#system-prereqs).
+1. `./dotfiles bootstrap desktop`
 2. Launch `nvim`. On first run it bootstraps `lazy.nvim`, which installs every plugin, and
    `mason.nvim` installs the configured language servers automatically. See
    [Using lazy.nvim and mason.nvim](#using-lazynvim-and-masonnvim) below for day-to-day use.
 
 ### TTY Computer
 
-1. `./dotfiles setup tty`
-2. Launch `nvim` (same first-run plugin/LSP bootstrap as the desktop path above).
+1. `./dotfiles bootstrap tty`
+2. Launch `nvim` — just the editor and its core plugins; no plugin needs a language runtime to
+   install, since mason/lspconfig aren't loaded on this profile at all.
 
 **Notes:**
 - You'll likely need to set `export TERM=xterm-256color` in your `~/.zshrc` file.
 
+### Script Layout
+
+`./dotfiles help` lists every command, split into two families:
+
+- **`bootstrap`** — one-time (or rare) setup: `bootstrap desktop`/`bootstrap tty` run the full
+  sequence for that profile, in order. `bootstrap languages` is the desktop-only language-runtime
+  install on its own — pulled out of the main sequence specifically so bumping a pinned version
+  later (see [System Prereq's](#system-prereqs)) doesn't mean re-running everything else too.
+- **`install`** — piecewise and idempotent: re-run `install config desktop`, `install zsh`, etc.
+  any time you change something in this repo and want just that piece re-applied, without
+  repeating the one-time bootstrap steps.
+
+Each command maps to one script under `setup/` (or `install-nvim` → `setup/nvim`), named to match:
+`setup/packages` and `setup/zsh` are shared by both profiles; everything under `setup/desktop/` —
+including `bootstrap-languages` — only ever runs on desktop; `setup/tty/config` is the tty
+equivalent of `setup/desktop/config`.
 
 ## System Prereq's
-`init/install-packages` apt-installs a small set of packages needed for a functional dev experience,
-then installs [nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby) and
-[uv](https://docs.astral.sh/uv) (Python) — each installer is safe to re-run later to update itself.
+`setup/packages` apt-installs a small set of OS-level packages shared by both profiles (tmux,
+fzf, ripgrep, etc.) — the same list runs on TTY.
 
-Language servers are installed by Neovim's `mason.nvim` and manages them automatically (see
-`nvim/lua/user/plugins.lua`'s `ensure_installed` list). Mason still relies on the underlying
-language runtime being on your `$PATH` for some servers (e.g. Node for the JS/TS/HTML/CSS
-servers, Python for `zuban`, Ruby/gem for `ruby-lsp`) — `install-packages` covers that, but you
-still need to actually install a Node/Ruby/Python version through nvm/rbenv/uv yourself (e.g.
-`nvm install --lts`, `rbenv install 3.3.5`, `uv python install`) before mason can use it.
+Everything language/LSP-related is desktop-only, installed by `setup/desktop/bootstrap-languages`:
+[nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby), and
+[uv](https://docs.astral.sh/uv) (Python), plus the pinned Node/Ruby versions set by
+`NODE_VERSION`/`RUBY_VERSION` at the top of that script (made default via `nvm alias
+default`/`rbenv global`). Python is the exception: only the `uv` tool itself gets installed, not
+a Python version, so you'll still need to run `uv python install` yourself before mason can use
+`zuban`.
+
+Language servers are installed by Neovim's `mason.nvim` and it manages them automatically (see
+`nvim/lua/user/plugins.lua`'s `ensure_installed` list) — but that whole block, along with
+`nvim-lspconfig` itself, only loads on the desktop profile (`profile.is_tty()` gates it in
+`plugins.lua`), since a TTY machine never gets the runtimes above for mason to install anything
+against in the first place.
 
 ## Using lazy.nvim and mason.nvim
 

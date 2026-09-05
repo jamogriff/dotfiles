@@ -9,33 +9,27 @@ ln -s $DOTFILES/.gitconfig $HOME/.gitconfig
 # Ensure there is a config directory
 [ -d "$HOME/.config" ] || mkdir -p "$HOME/.config"
 
-rm -rf $HOME/.config/kitty
-ln -s $DOTFILES/kitty $HOME/.config/kitty
-
-rm -rf $HOME/.fonts
-cd $DOTFILES/fonts
-unzip "*.zip" "*.ttf" "*.otf" -d $HOME/.fonts
-rm -rf $DOTFILES/fonts/*/
-
 rm -f $HOME/.tmux.conf
 ln -s $DOTFILES/tmux/tmux.conf $HOME/.tmux.conf
 
 mkdir -p $HOME/.local/bin
 rm -f $HOME/.local/bin/t
 ln -s $DOTFILES/scripts/t $HOME/.local/bin/t
+rm -f $HOME/.local/bin/mac_display
+ln -s $DOTFILES/scripts/mac_display $HOME/.local/bin/mac_display
 
 rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
-echo desktop > "$HOME/.dotfiles-profile"
+echo tty > "$HOME/.dotfiles-profile"
 
 # oh-my-zsh sources every *.zsh file in $ZSH_CUSTOM, in alphabetical order and
 # after everything else it loads, so it's the supported place for personal config
 # that must survive the installer rewriting ~/.zshrc. Symlinking instead of copying
 # keeps these files under version control in this repo.
 #
-# Guarded on ~/.oh-my-zsh actually existing: `dotfiles setup` always runs
-# install-zsh first so it will, but this script can also be run on its own. Note we
-# must not create ~/.oh-my-zsh ourselves to satisfy that check — install-zsh treats
+# Guarded on ~/.oh-my-zsh actually existing: `dotfiles bootstrap` always runs
+# setup/zsh first so it will, but this script can also be run on its own. Note we
+# must not create ~/.oh-my-zsh ourselves to satisfy that check — setup/zsh treats
 # the presence of that directory as "oh-my-zsh is installed" and would skip it.
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 if [ -d "$HOME/.oh-my-zsh" ]; then
@@ -46,12 +40,4 @@ if [ -d "$HOME/.oh-my-zsh" ]; then
     done
 else
     echo 'WARNING: ~/.oh-my-zsh not found; skipping zsh custom symlinks. Run `dotfiles install zsh` first, then re-run this.'
-fi
-
-# Handle uncommitted secrets file
-if [ -f $DOTFILES/.secrets ]; then
-    rm -f $HOME/.local/.secrets
-    ln -s $DOTFILES/.secrets $HOME/.local/.secrets
-else
-    echo 'WARNING: Add .secrets file in directory to properly set env vars'
 fi

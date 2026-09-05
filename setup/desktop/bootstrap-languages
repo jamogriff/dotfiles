@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
-# OS-level prerequisites shared by desktop and TTY setups (see README "System Prereq's").
-# Language-server installation itself is handled inside Neovim by mason.nvim — this script
-# only covers what mason can't install for you: the runtimes/tools it and the shell rely on.
-PACKAGES=(xclip tmux curl unzip fzf ripgrep zsh)
+# Installs the language runtimes mason.nvim's LSPs rely on: Node (nvm), Ruby
+# (rbenv), and the uv tool for Python. Desktop-only, since LSPs only run in a
+# desktop dev session (nvim/lua/user/plugins.lua's is_tty() gate skips
+# mason/lspconfig entirely on tty) -- a lightweight server has no use for a C
+# toolchain and a from-source Ruby build.
+#
+# This is a *bootstrap* step, not a piecewise `install` one: re-running it
+# means recompiling Ruby if the pinned version below changed (several minutes,
+# vs. a quick config tweak), so it only runs as part of `dotfiles bootstrap
+# desktop`. To pick up a version bump later without repeating the whole
+# bootstrap, edit NODE_VERSION/RUBY_VERSION below and run
+# `dotfiles bootstrap languages` on its own.
 
 # ruby-build compiles Ruby from source rather than downloading a binary, so rbenv
 # needs a C toolchain plus the headers Ruby links against. Miss one and `rbenv
@@ -23,7 +31,7 @@ NODE_VERSION=24        # nvm resolves this to the latest 24.x
 RUBY_VERSION=3.3.5
 
 sudo apt-get update
-sudo apt-get install -y "${PACKAGES[@]}" "${RUBY_BUILD_DEPS[@]}"
+sudo apt-get install -y "${RUBY_BUILD_DEPS[@]}"
 
 # Language runtime version managers, so mason.nvim has a Node/Ruby/Python to install
 # LSPs with. Each installer is self-idempotent (safe to re-run; updates an existing
@@ -31,7 +39,7 @@ sudo apt-get install -y "${PACKAGES[@]}" "${RUBY_BUILD_DEPS[@]}"
 #
 # Note they all detect *bash* and write their init snippet to ~/.bashrc, because
 # that's the shell running this script — zsh gets the same wiring from
-# zsh/version-managers.zsh, which install-config symlinks into $ZSH_CUSTOM.
+# zsh/version-managers.zsh, which setup/desktop/config symlinks into $ZSH_CUSTOM.
 
 # nvm (Node) — https://github.com/nvm-sh/nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
