@@ -3,41 +3,20 @@
 INIT_SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 DOTFILES="${INIT_SCRIPT_DIR}/../.."
 
-rm $HOME/.gitconfig
-ln -s $DOTFILES/.gitconfig $HOME/.gitconfig
+source "$DOTFILES/setup/lib/config.bash"
 
-# Ensure there is a config directory
-[ -d "$HOME/.config" ] || mkdir -p "$HOME/.config"
+# The tty counterpart to setup/desktop/config's list: same entries minus the
+# desktop-only ones (kitty, .ideavimrc). Nothing under config/ is tty-only
+# today, but the per-profile list is what would express it if that changed.
+for name in .gitconfig .tmux.conf nvim; do
+    link_config "$name"
+done
 
-rm -f $HOME/.tmux.conf
-ln -s $DOTFILES/tmux/tmux.conf $HOME/.tmux.conf
+link_bin t
+# Desktop doesn't get this one: it's for driving an external display from a
+# headless/console session.
+link_bin mac_display
 
-mkdir -p $HOME/.local/bin
-rm -f $HOME/.local/bin/t
-ln -s $DOTFILES/scripts/t $HOME/.local/bin/t
-rm -f $HOME/.local/bin/mac_display
-ln -s $DOTFILES/scripts/mac_display $HOME/.local/bin/mac_display
-
-rm -rf $HOME/.config/nvim
-ln -s $DOTFILES/nvim $HOME/.config/nvim
 echo tty > "$HOME/.dotfiles-profile"
 
-# oh-my-zsh sources every *.zsh file in $ZSH_CUSTOM, in alphabetical order and
-# after everything else it loads, so it's the supported place for personal config
-# that must survive the installer rewriting ~/.zshrc. Symlinking instead of copying
-# keeps these files under version control in this repo.
-#
-# Guarded on ~/.oh-my-zsh actually existing: `dotfiles bootstrap` always runs
-# setup/zsh first so it will, but this script can also be run on its own. Note we
-# must not create ~/.oh-my-zsh ourselves to satisfy that check — setup/zsh treats
-# the presence of that directory as "oh-my-zsh is installed" and would skip it.
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-if [ -d "$HOME/.oh-my-zsh" ]; then
-    mkdir -p "$ZSH_CUSTOM"
-    for f in "$DOTFILES"/zsh/*.zsh; do
-        rm -f "$ZSH_CUSTOM/$(basename "$f")"
-        ln -s "$f" "$ZSH_CUSTOM/$(basename "$f")"
-    done
-else
-    echo 'WARNING: ~/.oh-my-zsh not found; skipping zsh custom symlinks. Run `dotfiles install zsh` first, then re-run this.'
-fi
+link_zsh_custom

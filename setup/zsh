@@ -55,20 +55,26 @@ else
   echo "oh-my-zsh already sourced from ~/.zshrc, skipping."
 fi
 
-# Source the .secrets symlink setup/desktop/config sets up at ~/.local/.secrets (env vars
-# like INTELEPHENSE_LICENSE). Goes in last so anything exported there wins over
+# Source the .env symlink setup/desktop/config sets up at ~/.env (env vars like
+# INTELEPHENSE_LICENSE). Goes in last so anything exported there wins over
 # whatever the version managers or oh-my-zsh put on PATH above it.
-if ! grep -qF '.local/.secrets' "$HOME/.zshrc" 2>/dev/null; then
+#
+# This block was spelled ~/.local/.secrets before the config/ reorganization. On
+# a machine bootstrapped back then the grep below won't match that older block,
+# so this appends the new one and leaves the dead one in place — see the
+# migration notes in the README for removing it (and its now-dangling
+# ~/.local/.secrets symlink) by hand.
+if ! grep -qF 'source $HOME/.env' "$HOME/.zshrc" 2>/dev/null; then
   cat >>"$HOME/.zshrc" <<'EOF'
 
-if [ -f $HOME/.local/.secrets ]; then
-    source $HOME/.local/.secrets
+if [ -f $HOME/.env ]; then
+    source $HOME/.env
 else
-    echo 'WARNING: No secrets file found'
+    echo 'WARNING: No .env file found'
 fi
 EOF
 else
-  echo ".secrets sourcing already present in ~/.zshrc, skipping."
+  echo ".env sourcing already present in ~/.zshrc, skipping."
 fi
 
 # Fallback for a ~/.zshrc that got oh-my-zsh's own template some other way (an

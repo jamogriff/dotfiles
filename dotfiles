@@ -4,11 +4,13 @@
 #
 # Usage: dotfiles <command> [target]
 #
-# Two command families, deliberately kept separate:
+# Three command families, deliberately kept separate:
 #   bootstrap   one-time (or rare) setup: the full desktop/tty sequence, and
 #               the heavy desktop-only language-runtime install on its own.
-#   install     piecewise, idempotent, safe to re-run any time you tweak a
-#               config file and want just that piece re-applied.
+#   install     piecewise, idempotent installs of third-party software.
+#   sync        reconcile this machine's symlinks against what the repo
+#               currently says. Its own family rather than an `install`
+#               subcommand because it installs nothing.
 #
 # Run with no arguments, or "help", to see the full command list.
 
@@ -21,22 +23,24 @@ usage() {
 Usage: dotfiles <command> [target]
 
 Bootstrap (one-time; pick the one matching the machine):
-  bootstrap desktop        full desktop setup: packages, zsh, languages,
+  bootstrap desktop         full desktop setup: packages, zsh, languages,
                             terminal, config, nvim
   bootstrap tty             full tty setup: packages, zsh, config, nvim
                             (no languages, no terminal — see README)
 
 Install (piecewise; re-run any time):
-  install terminal            install the Kitty terminal (desktop only)
-  install config             symlink dotfiles for whichever profile this
-                            machine was bootstrapped with
-  install nvim                install the Neovim AppImage
+  install terminal          install the Kitty terminal (desktop only)
+  install nvim              install the Neovim AppImage
 
-  help                        show this message
+Sync (reconcile symlinks; re-run any time):
+  sync config               symlink everything in config/ for whichever
+                            profile this machine was bootstrapped with
+
+  help                      show this message
 
 Examples:
   dotfiles bootstrap desktop
-  dotfiles install config
+  dotfiles sync config
 EOF
 }
 
@@ -63,8 +67,8 @@ install_terminal() {
 
 # The profile this machine was bootstrapped with, from the ~/.dotfiles-profile
 # marker setup/desktop/config and setup/tty/config write. Same file
-# nvim/lua/user/profile.lua reads, so `install config` and the editor can never
-# disagree about which profile this machine is.
+# config/nvim/lua/user/profile.lua reads, so `sync config` and the editor can
+# never disagree about which profile this machine is.
 #
 # Unlike profile.lua, a missing or unrecognized file is an error rather than a
 # silent fall back to desktop: the editor only loses a few plugins by guessing
@@ -73,7 +77,7 @@ current_profile() {
   local profile_file="$HOME/.dotfiles-profile"
 
   if [ ! -f "$profile_file" ]; then
-    echo "install config: no $profile_file — this machine hasn't been bootstrapped yet. Run 'dotfiles bootstrap desktop' or 'dotfiles bootstrap tty' first." >&2
+    echo "sync config: no $profile_file — this machine hasn't been bootstrapped yet. Run 'dotfiles bootstrap desktop' or 'dotfiles bootstrap tty' first." >&2
     return 1
   fi
 
@@ -82,25 +86,32 @@ current_profile() {
   case "$profile" in
     desktop|tty) echo "$profile" ;;
     *)
-      echo "install config: $profile_file says '$profile', which isn't 'desktop' or 'tty'. Fix that file, or re-run 'dotfiles bootstrap <profile>'." >&2
+      echo "sync config: $profile_file says '$profile', which isn't 'desktop' or 'tty'. Fix that file, or re-run 'dotfiles bootstrap <profile>'." >&2
       return 1
       ;;
   esac
 }
 
+# Named for what it does: after the first run it reconciles existing symlinks
+# against what the repo currently says rather than installing anything. Worth
+# re-running whenever a new file appears under config/, a source path moves, a
+# conditional target like .env finally exists, or something clobbered a symlink.
+#
 # Still takes the profile as an argument rather than calling current_profile
 # itself: bootstrap runs this *before* the marker file it reads exists, and
 # already knows the target from the command line.
-install_config() {
+sync_config() {
   local target="$1"
   case "$target" in
-    desktop) bash "$DOTFILES_DIR/setup/desktop/config" ;;
-    tty)     bash "$DOTFILES_DIR/setup/tty/config" ;;
+    desktop|tty) ;;
     *)
-      echo "install config: target must be 'desktop' or 'tty', got '$target'" >&2
+      echo "sync config: target must be 'desktop' or 'tty', got '$target'" >&2
       return 1
       ;;
   esac
+
+  echo "==> Syncing config symlinks ($target profile)"
+  bash "$DOTFILES_DIR/setup/$target/config"
 }
 
 install_nvim() {
@@ -134,10 +145,10 @@ bootstrap() {
     desktop)
       bootstrap_languages
       install_terminal
-      install_config desktop
+      sync_config desktop
       ;;
     tty)
-      install_config tty
+      sync_config tty
       ;;
   esac
   install_nvim
@@ -163,20 +174,37 @@ case "$cmd" in
   install)
     case "$sub" in
       terminal) install_terminal ;;
+      nvim)     install_nvim ;;
       config)
-        # Rejected rather than ignored: `install config desktop` was the old
-        # spelling, so silently accepting it would look like it still picks the
-        # profile when the marker file is what actually decides now.
+        # Pointed at rather than quietly aliased: this was the spelling until
+        # config symlinking moved out of the install family, so a bare "Unknown
+        # install target" would read as the command having been dropped.
+        echo "install config: renamed — it installs nothing. Use 'dotfiles sync config'." >&2
+        exit 1
+        ;;
+      *)
+        echo "Unknown install target: '$sub'" >&2
+        usage
+        exit 1
+        ;;
+    esac
+    ;;
+  sync)
+    case "$sub" in
+      config)
+        # Rejected rather than ignored: `sync config desktop` mirrors the old
+        # `install config desktop` spelling, so silently accepting it would look
+        # like it still picks the profile when the marker file is what actually
+        # decides now.
         if [ -n "${3:-}" ]; then
-          echo "install config: takes no target — the profile comes from ~/.dotfiles-profile (got '$3')" >&2
+          echo "sync config: takes no target — the profile comes from ~/.dotfiles-profile (got '$3')" >&2
           exit 1
         fi
         profile="$(current_profile)" || exit 1
-        install_config "$profile"
+        sync_config "$profile"
         ;;
-      nvim)     install_nvim ;;
       *)
-        echo "Unknown install target: '$sub'" >&2
+        echo "Unknown sync target: '$sub'" >&2
         usage
         exit 1
         ;;
