@@ -1,35 +1,25 @@
 #!/usr/bin/env bash
 set -e
 
-# Constants
 APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-x86_64.appimage"
 LOCAL_BIN="$HOME/.local/bin"
 NVIM_APPIMAGE="$LOCAL_BIN/nvim-linux-x86_64.appimage"
 NVIM_EXTRACTED="$HOME/.local/nvim-app"
 
-# Ensure local bin exists
 mkdir -p "$LOCAL_BIN"
 
-# Remove old symlink if it exists
 if [ -L "$LOCAL_BIN/nvim" ]; then
   sudo rm "$LOCAL_BIN/nvim"
 fi
 
-# Clean up any old extracted dir
 rm -rf "$NVIM_EXTRACTED"
 
-# Download AppImage
 cd "$LOCAL_BIN"
 curl -LO "$APPIMAGE_URL"
 chmod u+x "$NVIM_APPIMAGE"
 
-# Extract AppImage
 "$NVIM_APPIMAGE" --appimage-extract
-
-# Move to final location
 mv squashfs-root "$NVIM_EXTRACTED"
-
-# Create symlink
 ln -s "$NVIM_EXTRACTED/AppRun" "$LOCAL_BIN/nvim"
 
 echo "✅ Neovim installed and symlinked to 'nvim'."

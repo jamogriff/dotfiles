@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
-# Tests for the top-level `dotfiles` dispatcher's own argument-handling logic
-# -- the paths that don't need to reach a real install script.
+# The dispatcher's own argument handling -- the paths that don't reach a real
+# install script.
 
 load test_helper
 
@@ -47,15 +47,15 @@ setup() {
 }
 
 @test "install config points at its new spelling rather than just failing" {
-  # The old name for `sync config`. A bare "Unknown install target" here would
-  # read as the command having been dropped, so it gets its own message.
+  # The old name for `sync config`, which gets its own message rather than a
+  # bare "Unknown install target".
   fake_home
   echo tty > "$HOME/.dotfiles-profile"
 
   DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" install config
   [ "$status" -eq 1 ]
   [[ "$output" == *"Use 'dotfiles sync config'"* ]]
-  # And it did not quietly do the work anyway.
+  # And it didn't quietly do the work anyway.
   [[ "$output" != *"fake tty config installed"* ]]
 }
 
@@ -105,11 +105,8 @@ setup() {
 }
 
 @test "bootstrap tty does not run desktop-only steps (via fixture override)" {
-  # DOTFILES_DIR is overridable, so point it at fixtures containing fakes for
-  # every step `bootstrap tty` should call, and NONE of the desktop-only
-  # ones (bootstrap-languages, terminal) -- if the dispatcher tried to call a
-  # desktop-only step for the tty target, bash itself would fail with "No
-  # such file or directory" trying to run a fixture that doesn't exist.
+  # The fixture tree has fakes for every step `bootstrap tty` should call and
+  # none of the desktop-only ones, so calling one fails on a missing file.
   DOTFILES_DIR="$REPO_DIR/tests/fixtures" run "$DISPATCHER" bootstrap tty
   [ "$status" -eq 0 ]
   [[ "$output" == *"fake packages installed"* ]]

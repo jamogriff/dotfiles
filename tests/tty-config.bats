@@ -1,18 +1,15 @@
 #!/usr/bin/env bats
-# Exercises the REAL setup/tty/config script end to end -- no network calls or
-# package installs, just symlinks, so safe to run for real against a throwaway
-# $HOME. Mirrors desktop-config.bats, minus the pieces the tty profile doesn't
-# get (kitty, .ideavimrc, fonts, .env) and plus the one thing it has that
-# desktop doesn't (scripts/mac_display).
+# Exercises the real setup/tty/config end to end -- just symlinks, so safe to
+# run against a throwaway $HOME. Mirrors desktop-config.bats, minus what tty
+# doesn't get and plus scripts/mac_display.
 
 load test_helper
 
-# Every name under config/ this profile symlinks via link_config...
+# Every name under config/ this profile symlinks...
 SYNCED=".gitconfig .tmux.conf nvim"
 
-# ...and every name it deliberately doesn't: the two desktop-only entries (no
-# GUI terminal and no JetBrains IDE on a tty box), plus `zsh`, the naming
-# convention's one exception, which both profiles handle via $ZSH_CUSTOM.
+# ...and every name it deliberately doesn't: the desktop-only entries, plus
+# `zsh`, which both profiles handle via $ZSH_CUSTOM instead.
 NOT_SYNCED="kitty .ideavimrc zsh"
 
 setup() {

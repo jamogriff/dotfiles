@@ -1,22 +1,17 @@
 #!/usr/bin/env bats
-# Exercises the REAL setup/desktop/config script end to end. Unlike
-# setup/packages and setup/nvim it makes no network calls and installs no
-# packages -- just symlinks and a font unzip -- so it's safe to run for real
-# against a throwaway $HOME instead of faking it out.
+# Exercises the real setup/desktop/config end to end -- just symlinks and a
+# font unzip, so safe to run against a throwaway $HOME.
 #
-# The symlink assertions are driven off SYNCED/NOT_SYNCED rather than being
-# hand-written one per target: that's what makes "someone added config/foo and
-# never wired it up" a test failure instead of a silent no-op.
+# Assertions are driven off SYNCED/NOT_SYNCED rather than hand-written per
+# target: that's what makes an unwired config/ entry a failure, not a no-op.
 
 load test_helper
 
-# Every name under config/ this profile is expected to symlink via link_config.
+# Every name under config/ this profile is expected to symlink.
 SYNCED=".gitconfig .ideavimrc .tmux.conf kitty nvim"
 
-# ...and every name under config/ it deliberately doesn't. `zsh` is the one real
-# exception to the naming convention -- oh-my-zsh wants each .zsh file symlinked
-# into $ZSH_CUSTOM individually, not the directory as a unit -- so it's covered
-# by its own tests further down instead.
+# ...and every name it deliberately doesn't. `zsh` goes into $ZSH_CUSTOM file
+# by file instead, covered by its own tests further down.
 NOT_SYNCED="zsh"
 
 setup() {
@@ -49,16 +44,14 @@ setup() {
   run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
 
-  # Unzipped rather than symlinked: the repo tracks the vendor's .zip, so this
-  # is the one thing in the script that isn't a link at all.
+  # Unzipped rather than symlinked -- the one thing here that isn't a link.
   [ -d "$HOME/.fonts" ]
   [ ! -L "$HOME/.fonts" ]
 }
 
 @test "replaces a real file or directory sitting at a destination path" {
-  # The drift case `sync config` exists for: something clobbered a symlink with
-  # a real file (or a hand-rolled ~/.config/nvim predating this repo). rm -f
-  # alone wouldn't clear the directory, so this is worth pinning down.
+  # The drift case `sync config` exists for. rm -f alone wouldn't clear the
+  # directory, so this is worth pinning down.
   mkdir -p "$HOME/.config/nvim/lua"
   touch "$HOME/.config/nvim/init.lua"
   echo 'not a symlink' > "$HOME/.gitconfig"
@@ -93,8 +86,7 @@ setup() {
 }
 
 @test "symlinks .env to ~/.env when present" {
-  # .env is git-ignored, so a clean checkout never has one -- create it for the
-  # duration of this test only.
+  # .env is git-ignored, so a clean checkout never has one.
   touch "$REPO_DIR/.env"
   run bash "$REPO_DIR/setup/desktop/config"
   rm -f "$REPO_DIR/.env"   # clean up so we don't leave repo state dirty
@@ -115,8 +107,7 @@ setup() {
   run bash "$REPO_DIR/setup/desktop/config"
   [ "$status" -eq 0 ]
 
-  # Every file in config/zsh/ should land in custom/ as a symlink back to it, so
-  # editing the repo copy takes effect without re-running this script.
+  # Symlinks back to the repo, so editing a copy takes effect without a re-run.
   for f in "$REPO_DIR"/config/zsh/*.zsh; do
     target="$HOME/.oh-my-zsh/custom/$(basename "$f")"
     [ -L "$target" ]
@@ -141,7 +132,7 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"WARNING: ~/.oh-my-zsh not found"* ]]
 
-  # Creating the dir here would make setup/zsh think oh-my-zsh is already
-  # installed and skip it entirely -- the exact trap this guard exists to avoid.
+  # Creating it here would make setup/zsh think oh-my-zsh is already installed
+  # and skip itself.
   [ ! -d "$HOME/.oh-my-zsh" ]
 }
