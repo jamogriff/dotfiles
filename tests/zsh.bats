@@ -58,15 +58,36 @@ setup() {
   [ "$(grep -cF 'oh-my-zsh.sh' "$HOME/.zshrc")" -eq 1 ]
 }
 
-@test "does not duplicate the .secrets sourcing block on a second run" {
+@test "appends the .env sourcing block to a fresh .zshrc" {
+  run bash "$REPO_DIR/setup/zsh"
+  [ "$status" -eq 0 ]
+  grep -qxF 'if [ -f $HOME/.env ]; then' "$HOME/.zshrc"
+  grep -qxF '    source $HOME/.env' "$HOME/.zshrc"
+}
+
+@test "does not duplicate the .env sourcing block on a second run" {
   bash "$REPO_DIR/setup/zsh"
   run bash "$REPO_DIR/setup/zsh"
   [ "$status" -eq 0 ]
-  # The block contains two lines that both mention .local/.secrets (the `if`
-  # guard and the `source` line), so a *correct* single append already counts
-  # 2 -- checking one specific line is what actually proves it wasn't
-  # appended twice.
-  [ "$(grep -cxF '    source $HOME/.local/.secrets' "$HOME/.zshrc")" -eq 1 ]
+  # The block contains two lines that both mention $HOME/.env (the `if` guard
+  # and the `source` line), so a *correct* single append already counts 2 --
+  # checking one specific line is what actually proves it wasn't appended twice.
+  [ "$(grep -cxF '    source $HOME/.env' "$HOME/.zshrc")" -eq 1 ]
+}
+
+@test "appends the .env block to a .zshrc still carrying the old .secrets one" {
+  # The pre-config/ spelling. setup/zsh only runs as part of `bootstrap`, so an
+  # already-bootstrapped machine won't hit this -- but if it is re-run, the new
+  # block must go in rather than the old one being mistaken for it. The dead
+  # .secrets block is left alone; removing it is a documented manual step.
+  cat > "$HOME/.zshrc" <<'EOF'
+if [ -f $HOME/.local/.secrets ]; then
+    source $HOME/.local/.secrets
+fi
+EOF
+  run bash "$REPO_DIR/setup/zsh"
+  [ "$status" -eq 0 ]
+  grep -qxF '    source $HOME/.env' "$HOME/.zshrc"
 }
 
 @test "adds docker plugins to a bare plugins=(git) line left by another source" {
@@ -76,8 +97,8 @@ setup() {
   cat > "$HOME/.zshrc" <<'EOF'
 plugins=(git)
 source $ZSH/oh-my-zsh.sh
-if [ -f $HOME/.local/.secrets ]; then
-    source $HOME/.local/.secrets
+if [ -f $HOME/.env ]; then
+    source $HOME/.env
 fi
 EOF
   run bash "$REPO_DIR/setup/zsh"
@@ -89,8 +110,8 @@ EOF
   cat > "$HOME/.zshrc" <<'EOF'
 plugins=(git rust)
 source $ZSH/oh-my-zsh.sh
-if [ -f $HOME/.local/.secrets ]; then
-    source $HOME/.local/.secrets
+if [ -f $HOME/.env ]; then
+    source $HOME/.env
 fi
 EOF
   run bash "$REPO_DIR/setup/zsh"

@@ -2,7 +2,7 @@
 
 # Install and configure Kitty terminal emulator
 sudo rm -f /usr/local/bin/kitty
-rm -rf $HOME/.config/kitty # install config adds this file
+rm -rf $HOME/.config/kitty # sync config adds this symlink
 rm -rf $HOME/.local/kitty.app
 curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
 sudo ln -s $HOME/.local/kitty.app/bin/kitty /usr/local/bin/kitty

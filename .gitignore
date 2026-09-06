@@ -1,3 +1,5 @@
 *.bak
-.secrets
+# Exactly .env, not .env* — the committed .env.example template sits right next
+# to it and must stay tracked.
+.env
 .idea/

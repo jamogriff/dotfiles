@@ -48,3 +48,70 @@ path_without_zsh() {
   done
   echo "$shimdir:$MOCK_BIN_DIR:$REPO_DIR/tests/mocks"
 }
+
+# --- config/ symlink assertions -------------------------------------------
+# Shared by desktop-config.bats and tty-config.bats, which differ only in which
+# names each profile syncs.
+
+# Every entry in the repo's config/ directory, one per line. `ls -A` is what
+# picks up the dotfiles (.gitconfig, .tmux.conf, .ideavimrc) that a plain glob
+# would skip.
+config_entries() {
+  (cd "$REPO_DIR/config" && ls -A)
+}
+
+# Assert config/<name> got symlinked to where the naming convention says it
+# should land: a directory to ~/.config/<name>, a file to ~/<name>.
+#
+# The rule is spelled out again here rather than reusing setup/lib/config.bash's
+# link_config, so a bug in that function fails a test instead of being asserted
+# against its own output.
+assert_linked() {
+  local name="$1" dest
+
+  if [ -d "$REPO_DIR/config/$name" ]; then
+    dest="$HOME/.config/$name"
+  else
+    dest="$HOME/$name"
+  fi
+
+  if [ ! -L "$dest" ]; then
+    echo "expected a symlink at $dest for config/$name" >&2
+    return 1
+  fi
+  # `-ef` compares what the paths resolve to, so it passes regardless of how the
+  # link spells the path it points at (the scripts use a ../.. relative form).
+  if [ ! "$dest" -ef "$REPO_DIR/config/$name" ]; then
+    echo "$dest does not resolve to $REPO_DIR/config/$name" >&2
+    return 1
+  fi
+}
+
+# The inverse: nothing was linked for a name this profile shouldn't sync.
+assert_not_linked() {
+  local name="$1"
+  [ ! -e "$HOME/.config/$name" ] || { echo "unexpected $HOME/.config/$name" >&2; return 1; }
+  [ ! -e "$HOME/$name" ] || { echo "unexpected $HOME/$name" >&2; return 1; }
+}
+
+# Guards against the failure this suite's structural tests exist to catch:
+# someone adds config/<something> and forgets to add it to a profile's list, so
+# it silently never gets symlinked on any machine. Every entry in config/ must
+# be named by one of the two lists the calling test passes in -- the names it
+# syncs, and the names it deliberately doesn't -- each as one space-separated
+# string.
+assert_all_entries_accounted_for() {
+  local expected=" $1 $2 "
+  local entry
+  local failed=0
+
+  while read -r entry; do
+    # Space-delimited substring match, which is why both sides are padded.
+    if [[ "$expected" != *" $entry "* ]]; then
+      echo "config/$entry isn't in this profile's synced or deliberately-skipped list" >&2
+      failed=1
+    fi
+  done < <(config_entries)
+
+  return "$failed"
+}
