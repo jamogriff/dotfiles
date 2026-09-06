@@ -1,11 +1,7 @@
 #!/usr/bin/env bats
-# Exercises the REAL setup/zsh, with apt-get/sudo/curl/getent/chsh
-# mocked out (see tests/mocks/). Deliberately NOT covered: whether the script
-# actually switches your login shell. That branch reads real account state
-# (passwd, /etc/shells) that isn't safe to fake convincingly in a sandbox --
-# see the getent mock's comment for how it's kept from ever firing here.
-# Everything else -- oh-my-zsh install idempotency, .zshrc content and its
-# own idempotency -- runs against the real script logic.
+# Exercises the real setup/zsh with apt-get/sudo/curl/getent/chsh mocked out.
+# Not covered: the login-shell switch, which reads account state (passwd,
+# /etc/shells) that isn't safe to fake convincingly -- see the getent mock.
 
 load test_helper
 
@@ -54,7 +50,7 @@ setup() {
   bash "$REPO_DIR/setup/zsh"
   run bash "$REPO_DIR/setup/zsh"
   [ "$status" -eq 0 ]
-  # grep -c counts matching lines; there should be exactly one, not two.
+  # Exactly one matching line, not two.
   [ "$(grep -cF 'oh-my-zsh.sh' "$HOME/.zshrc")" -eq 1 ]
 }
 
@@ -69,17 +65,14 @@ setup() {
   bash "$REPO_DIR/setup/zsh"
   run bash "$REPO_DIR/setup/zsh"
   [ "$status" -eq 0 ]
-  # The block contains two lines that both mention $HOME/.env (the `if` guard
-  # and the `source` line), so a *correct* single append already counts 2 --
-  # checking one specific line is what actually proves it wasn't appended twice.
+  # A correct single append already counts 2 lines mentioning $HOME/.env (the
+  # guard and the source), so only one specific line proves it wasn't doubled.
   [ "$(grep -cxF '    source $HOME/.env' "$HOME/.zshrc")" -eq 1 ]
 }
 
 @test "appends the .env block to a .zshrc still carrying the old .secrets one" {
-  # The pre-config/ spelling. setup/zsh only runs as part of `bootstrap`, so an
-  # already-bootstrapped machine won't hit this -- but if it is re-run, the new
-  # block must go in rather than the old one being mistaken for it. The dead
-  # .secrets block is left alone; removing it is a documented manual step.
+  # The pre-config/ spelling: on a re-run the new block must go in rather than
+  # the old one being mistaken for it. Removing the dead one is a manual step.
   cat > "$HOME/.zshrc" <<'EOF'
 if [ -f $HOME/.local/.secrets ]; then
     source $HOME/.local/.secrets
@@ -91,9 +84,8 @@ EOF
 }
 
 @test "adds docker plugins to a bare plugins=(git) line left by another source" {
-  # Simulate a .zshrc that already has our bootstrap block (so that part is
-  # skipped) but still carries oh-my-zsh's own untouched default plugins line
-  # -- the specific case the script's fallback comment describes.
+  # Our bootstrap block already present, but alongside oh-my-zsh's own
+  # untouched default plugins line -- what the script's fallback is for.
   cat > "$HOME/.zshrc" <<'EOF'
 plugins=(git)
 source $ZSH/oh-my-zsh.sh

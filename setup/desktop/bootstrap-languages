@@ -2,46 +2,33 @@
 set -e
 
 # Installs the language runtimes mason.nvim's LSPs rely on: Node (nvm), Ruby
-# (rbenv), and the uv tool for Python. Desktop-only, since LSPs only run in a
-# desktop dev session (nvim/lua/user/plugins.lua's is_tty() gate skips
-# mason/lspconfig entirely on tty) -- a lightweight server has no use for a C
-# toolchain and a from-source Ruby build.
+# (rbenv), and uv for Python. Desktop-only — plugins.lua's is_tty() gate skips
+# mason/lspconfig entirely, so a tty box has no use for a C toolchain and a
+# from-source Ruby build.
 #
-# Fresh-install only: this runs as part of `dotfiles bootstrap desktop` and is
-# not reachable as a command of its own. It exists to get a brand-new machine
-# from "no runtimes at all" to "mason has something to install LSPs against";
-# once that's true, adding or switching a language version is nvm/rbenv/uv's
-# own job (`nvm install`, `rbenv install`, `uv python install`), which they do
-# better than a wrapper here would. The pins below are what a *future* fresh
-# machine gets -- bumping one doesn't change a machine that's already set up.
+# Fresh-install only, as part of `dotfiles bootstrap desktop`. Afterwards,
+# adding or switching a version is nvm/rbenv/uv's own job; bumping a pin below
+# only changes what the next fresh machine gets.
 
-# ruby-build compiles Ruby from source rather than downloading a binary, so rbenv
-# needs a C toolchain plus the headers Ruby links against. Miss one and `rbenv
-# install` dies partway through a compile with an error that doesn't obviously
-# point back to a missing package. Names are the Ubuntu/Debian ones (this targets
-# Pop!_OS 24.04 noble); see the ruby-build wiki for other distros. `rustc` is what
-# lets Ruby 3.2+ build YJIT — drop it if you'd rather not pull in the toolchain.
+# ruby-build compiles Ruby from source, so rbenv needs a C toolchain plus the
+# headers Ruby links against — miss one and `rbenv install` dies partway through
+# a compile with an error that doesn't point back at the missing package. Names
+# are Ubuntu/Debian's (this targets Pop!_OS 24.04). `rustc` is what lets Ruby
+# 3.2+ build YJIT.
 RUBY_BUILD_DEPS=(
   autoconf patch build-essential rustc libssl-dev zlib1g-dev libyaml-dev
   libreadline-dev libncurses-dev libffi-dev libgdbm-dev libdb-dev uuid-dev
 )
 
-# Language runtimes to install. Pinned rather than floating so every machine set up
-# from this repo starts on the same versions (and then diverges as you install
-# newer ones with nvm/rbenv directly -- that's expected).
 NODE_VERSION=24        # nvm resolves this to the latest 24.x
 RUBY_VERSION=3.3.5
 
 sudo apt-get update
 sudo apt-get install -y "${RUBY_BUILD_DEPS[@]}"
 
-# Language runtime version managers, so mason.nvim has a Node/Ruby/Python to install
-# LSPs with. Each installer is self-idempotent (safe to re-run; updates an existing
-# install in place) and wires itself into your shell rc file automatically.
-#
-# Note they all detect *bash* and write their init snippet to ~/.bashrc, because
-# that's the shell running this script — zsh gets the same wiring from
-# zsh/version-managers.zsh, which setup/desktop/config symlinks into $ZSH_CUSTOM.
+# Each installer is self-idempotent and wires itself into the rc file it detects
+# — always ~/.bashrc, since this script runs under bash. zsh gets the same wiring
+# from config/zsh/version-managers.zsh.
 
 # nvm (Node) — https://github.com/nvm-sh/nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
@@ -52,19 +39,13 @@ curl -fsSL https://rbenv.org/install.sh | bash
 # uv (Python) — https://docs.astral.sh/uv
 curl -LsSf https://astral.sh/uv/0.12.9/install.sh | sh
 
-# --- language runtimes ---
-#
-# Each install is guarded so a re-run doesn't re-download a toolchain that's
-# already on disk — that matters most for Ruby, where a rebuild is several
-# minutes of compilation rather than a quick unpack.
-#
-# The version managers were only just installed above, so none of them are on this
-# shell's PATH yet (the rc-file snippets they wrote won't apply until a new shell).
-# Each block therefore loads or addresses its manager by absolute path.
+# The version managers aren't on this shell's PATH yet — the rc snippets they
+# just wrote don't apply until a new shell — so each block below loads or
+# addresses its manager by absolute path. Installs are guarded so a re-run
+# doesn't rebuild Ruby from source.
 
-# Node. nvm is a shell function, not a binary, so it has to be sourced. Guard on
-# `nvm version`, which prints the resolved version or the literal "N/A" — unlike
-# `nvm ls`, which exits 0 whether or not the version is present.
+# nvm is a shell function, so it has to be sourced. Guard on `nvm version`, which
+# prints "N/A" when absent; `nvm ls` exits 0 either way.
 export NVM_DIR="$HOME/.nvm"
 # shellcheck disable=SC1091
 . "$NVM_DIR/nvm.sh"
@@ -76,8 +57,8 @@ fi
 # Make it the version new shells get, otherwise the install is inert.
 nvm alias default "$NODE_VERSION"
 
-# Ruby. `rbenv versions --bare` lists exactly the installed versions, one per line,
-# so grep -x is an exact match rather than a prefix one (3.3.5 vs 3.3.50).
+# `versions --bare` is one version per line, so grep -x matches exactly (3.3.5
+# vs 3.3.50).
 RBENV="$HOME/.rbenv/bin/rbenv"
 if "$RBENV" versions --bare | grep -qx "$RUBY_VERSION"; then
   echo "Ruby $RUBY_VERSION already installed, skipping."

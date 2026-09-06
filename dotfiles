@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
 #
-# dotfiles — single entrypoint for every setup script in this repo.
-#
-# Usage: dotfiles <command> [target]
-#
-# Three command families, deliberately kept separate:
-#   bootstrap   one-time (or rare) setup: the full desktop/tty sequence, and
-#               the heavy desktop-only language-runtime install on its own.
-#   install     piecewise, idempotent installs of third-party software.
-#   sync        reconcile this machine's symlinks against what the repo
-#               currently says. Its own family rather than an `install`
-#               subcommand because it installs nothing.
-#
-# Run with no arguments, or "help", to see the full command list.
+# Single entrypoint for every setup script in this repo.
+# Usage: dotfiles <command> [target] — run `dotfiles help` for the list.
 
 set -euo pipefail
 
@@ -44,12 +33,8 @@ Examples:
 EOF
 }
 
-# --- one function per real script already in this repo ---
-
-# Not exposed as `install` subcommands: both are one-time steps that only run
-# as part of `bootstrap`. Re-running either by hand is a no-op at best (the
-# apt package list) or risks re-tripping install-time branching (oh-my-zsh,
-# the default-shell switch), so the functions stay internal to bootstrap.
+# Not exposed as `install` subcommands: re-running either by hand is a no-op at
+# best, or re-trips install-time branching (oh-my-zsh, the default-shell switch).
 install_packages() {
   echo "==> Installing shared OS packages"
   bash "$DOTFILES_DIR/setup/packages"
@@ -65,14 +50,10 @@ install_terminal() {
   bash "$DOTFILES_DIR/setup/desktop/terminal"
 }
 
-# The profile this machine was bootstrapped with, from the ~/.dotfiles-profile
-# marker setup/desktop/config and setup/tty/config write. Same file
-# config/nvim/lua/user/profile.lua reads, so `sync config` and the editor can
-# never disagree about which profile this machine is.
-#
-# Unlike profile.lua, a missing or unrecognized file is an error rather than a
-# silent fall back to desktop: the editor only loses a few plugins by guessing
-# wrong, but this would symlink a desktop config (kitty, fonts) onto a tty box.
+# Reads the same ~/.dotfiles-profile marker as config/nvim/lua/user/profile.lua.
+# A missing or unrecognized value is fatal here rather than defaulting to
+# desktop like profile.lua does: guessing wrong would symlink a desktop config
+# (kitty, fonts) onto a tty box.
 current_profile() {
   local profile_file="$HOME/.dotfiles-profile"
 
@@ -92,14 +73,8 @@ current_profile() {
   esac
 }
 
-# Named for what it does: after the first run it reconciles existing symlinks
-# against what the repo currently says rather than installing anything. Worth
-# re-running whenever a new file appears under config/, a source path moves, a
-# conditional target like .env finally exists, or something clobbered a symlink.
-#
-# Still takes the profile as an argument rather than calling current_profile
-# itself: bootstrap runs this *before* the marker file it reads exists, and
-# already knows the target from the command line.
+# Takes the profile as an argument rather than calling current_profile itself:
+# bootstrap runs this before the marker file it reads exists.
 sync_config() {
   local target="$1"
   case "$target" in
@@ -119,11 +94,8 @@ install_nvim() {
   bash "$DOTFILES_DIR/setup/nvim"
 }
 
-# Desktop-only and heavy (a from-source Ruby build), and not reachable as a
-# command of its own: this runs exactly once, as part of `bootstrap desktop`,
-# to give a fresh machine the runtimes mason's LSPs need. After that, installing
-# or switching a language version is nvm/rbenv/uv's job directly — this repo
-# has no reason to wrap it.
+# Desktop-only, heavy (a from-source Ruby build), and fresh-install only. Once a
+# machine has runtimes, switching versions is nvm/rbenv/uv's job directly.
 bootstrap_languages() {
   echo "==> Bootstrapping language runtimes (desktop only)"
   bash "$DOTFILES_DIR/setup/desktop/bootstrap-languages"
@@ -155,8 +127,6 @@ bootstrap() {
   echo "==> $target bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
 }
 
-# --- argument parsing / dispatch ---
-
 cmd="${1:-help}"
 sub="${2:-}"
 
@@ -176,9 +146,8 @@ case "$cmd" in
       terminal) install_terminal ;;
       nvim)     install_nvim ;;
       config)
-        # Pointed at rather than quietly aliased: this was the spelling until
-        # config symlinking moved out of the install family, so a bare "Unknown
-        # install target" would read as the command having been dropped.
+        # Named explicitly rather than falling through to "Unknown install
+        # target", which would read as the command having been dropped.
         echo "install config: renamed — it installs nothing. Use 'dotfiles sync config'." >&2
         exit 1
         ;;
@@ -192,10 +161,8 @@ case "$cmd" in
   sync)
     case "$sub" in
       config)
-        # Rejected rather than ignored: `sync config desktop` mirrors the old
-        # `install config desktop` spelling, so silently accepting it would look
-        # like it still picks the profile when the marker file is what actually
-        # decides now.
+        # Rejected rather than ignored: accepting the old `install config
+        # desktop` spelling would look like the argument still picks the profile.
         if [ -n "${3:-}" ]; then
           echo "sync config: takes no target — the profile comes from ~/.dotfiles-profile (got '$3')" >&2
           exit 1

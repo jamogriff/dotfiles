@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-# OS-level prerequisites shared by desktop and TTY setups (see README "System
-# Prereq's"). zsh has its own dedicated step (setup/zsh) since installing it is
-# only half the job -- oh-my-zsh and the default-shell switch need to happen
-# too. Desktop-only dev tooling (language runtimes, the LSPs they back) lives
-# in setup/desktop/bootstrap-languages instead of here, since a TTY machine
-# has no use for any of it -- see config/nvim/lua/user/plugins.lua's is_tty() gate.
+# OS-level prerequisites shared by both profiles. zsh has its own step
+# (setup/zsh) since installing it is only half the job; desktop-only dev tooling
+# lives in setup/desktop/bootstrap-languages.
 PACKAGES=(xclip tmux curl unzip fzf ripgrep)
 
 sudo apt-get update

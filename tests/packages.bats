@@ -1,8 +1,6 @@
 #!/usr/bin/env bats
-# Exercises the REAL setup/packages -- OS-level prerequisites shared by both
-# profiles. Deliberately thin: this script is now just an apt-get call, with
-# no idempotency branches of its own to test (apt-get install is already a
-# no-op for an already-installed package).
+# Exercises the real setup/packages. Deliberately thin: it's one apt-get call
+# with no branching of its own.
 
 load test_helper
 

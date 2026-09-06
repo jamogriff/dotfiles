@@ -5,16 +5,13 @@ DOTFILES="${INIT_SCRIPT_DIR}/../.."
 
 source "$DOTFILES/setup/lib/config.bash"
 
-# The tty counterpart to setup/desktop/config's list: same entries minus the
-# desktop-only ones (kitty, .ideavimrc). Nothing under config/ is tty-only
-# today, but the per-profile list is what would express it if that changed.
+# setup/desktop/config's list minus the desktop-only entries (kitty, .ideavimrc).
 for name in .gitconfig .tmux.conf nvim; do
     link_config "$name"
 done
 
 link_bin t
-# Desktop doesn't get this one: it's for driving an external display from a
-# headless/console session.
+# Not on desktop: this drives an external display from a headless session.
 link_bin mac_display
 
 echo tty > "$HOME/.dotfiles-profile"

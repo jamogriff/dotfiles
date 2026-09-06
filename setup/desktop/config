@@ -5,17 +5,15 @@ DOTFILES="${INIT_SCRIPT_DIR}/../.."
 
 source "$DOTFILES/setup/lib/config.bash"
 
-# Which entries under config/ the desktop profile gets. kitty and .ideavimrc are
-# the desktop-only ones — a tty box has no GUI terminal and no JetBrains IDE.
-# link_config works out where each one lands from its shape (directory ->
-# ~/.config/<name>, file -> ~/<name>); see setup/lib/config.bash.
+# kitty and .ideavimrc are the desktop-only entries. link_config works out where
+# each lands from its shape; see setup/lib/config.bash.
 for name in .gitconfig .ideavimrc .tmux.conf kitty nvim; do
     link_config "$name"
 done
 
-# Fonts are unzipped, not symlinked — the repo tracks the vendor's .zip, and
-# ~/.fonts wants the .ttf/.otf files themselves. The trailing rm cleans up the
-# nested directory unzip leaves behind inside the repo.
+# Fonts are unzipped, not symlinked — the repo tracks the vendor's .zip and
+# ~/.fonts wants the font files themselves. The trailing rm cleans up the nested
+# directory unzip leaves inside the repo.
 rm -rf $HOME/.fonts
 cd $DOTFILES/fonts
 unzip "*.zip" "*.ttf" "*.otf" -d $HOME/.fonts
@@ -27,12 +25,9 @@ echo desktop > "$HOME/.dotfiles-profile"
 
 link_zsh_custom
 
-# Machine-specific env vars (INTELEPHENSE_LICENSE and the like). Kept out of
-# config/ and hand-written here rather than driven by link_config: its
-# destination isn't the identity mapping every flat config/ entry uses, and it's
-# conditional — .env is git-ignored, so a fresh clone doesn't have one yet. Copy
-# .env.example to .env, fill it in, and re-run `dotfiles sync config` to pick it
-# up. setup/zsh is what sources ~/.env from ~/.zshrc.
+# Hand-written rather than driven by link_config: ~/.env isn't the identity
+# mapping flat config/ entries use, and .env is git-ignored so a fresh clone
+# doesn't have one. setup/zsh is what sources it from ~/.zshrc.
 if [ -f $DOTFILES/.env ]; then
     rm -f $HOME/.env
     ln -s $DOTFILES/.env $HOME/.env

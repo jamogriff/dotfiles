@@ -1,13 +1,8 @@
 #!/usr/bin/env bats
-# Exercises the REAL setup/desktop/bootstrap-languages, but with apt-get/sudo/
-# curl mocked out (see tests/mocks/) and fake nvm.sh/rbenv fixtures standing
-# in for the real ones, so this never touches the system package manager, the
-# network, or actually compiles Ruby from source.
-#
-# What's under test is the idempotency logic -- "is this version already
-# installed" -- since that's the part with actual branching behavior. Whether
-# the real nvm/rbenv/uv installer scripts themselves work isn't something a
-# unit test here can verify; that's on nvm/rbenv/uv's own test suites.
+# Exercises the real setup/desktop/bootstrap-languages with apt-get/sudo/curl
+# mocked out and fake nvm.sh/rbenv fixtures, so it never hits the package
+# manager, the network, or a Ruby compile. What's under test is the "is this
+# version already installed" branching, not the vendors' own installers.
 
 load test_helper
 
@@ -15,9 +10,8 @@ setup() {
   fake_home
   use_mocks
 
-  # bootstrap-languages sources "$HOME/.nvm/nvm.sh" and calls
-  # "$HOME/.rbenv/bin/rbenv" by absolute path, so the fakes have to live at
-  # those exact locations for the real script to find them.
+  # The script addresses both by absolute path, so the fakes have to sit at
+  # exactly those locations.
   mkdir -p "$HOME/.nvm" "$HOME/.rbenv/bin"
   cp "$REPO_DIR/tests/fixtures/nvm/nvm.sh" "$HOME/.nvm/nvm.sh"
   cp "$REPO_DIR/tests/fixtures/rbenv/rbenv" "$HOME/.rbenv/bin/rbenv"
@@ -39,16 +33,14 @@ setup() {
 }
 
 @test "skips the Node install when 24 is already present" {
-  # Pre-seed the marker our fake nvm.sh checks, as if a previous run (or a
-  # manual `nvm install 24`) had already happened.
+  # The marker our fake nvm.sh checks, as if a previous run had happened.
   touch "$HOME/.nvm/installed-24"
 
   run bash "$REPO_DIR/setup/desktop/bootstrap-languages"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Node v24.0.0 already installed, skipping."* ]]
   ! grep -q "nvm install 24" "$MOCK_LOG"
-  # The default alias is set unconditionally either way -- only the install
-  # itself is guarded.
+  # Set unconditionally either way -- only the install itself is guarded.
   grep -q "nvm alias default 24" "$MOCK_LOG"
 }
 

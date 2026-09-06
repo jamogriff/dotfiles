@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Install and configure Kitty terminal emulator
 sudo rm -f /usr/local/bin/kitty
 rm -rf $HOME/.config/kitty # sync config adds this symlink
 rm -rf $HOME/.local/kitty.app
@@ -8,9 +7,8 @@ curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
 sudo ln -s $HOME/.local/kitty.app/bin/kitty /usr/local/bin/kitty
 mkdir -p $HOME/.local/share/applications
 cp $HOME/.local/kitty.app/share/applications/kitty.desktop $HOME/.local/share/applications/
-# If you want to open text files and images in kitty via your file manager also add the kitty-open.desktop file
+# kitty-open.desktop is what lets a file manager open text/images in kitty
 cp $HOME/.local/kitty.app/share/applications/kitty-open.desktop $HOME/.local/share/applications/
-# Update the paths to the kitty and its icon in the kitty.desktop file(s)
+# The vendor's .desktop files reference a bare `kitty`, which isn't where we put it
 sed -i "s|Icon=kitty|Icon=$HOME/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" $HOME/.local/share/applications/kitty*.desktop
 sed -i "s|Exec=kitty|Exec=$HOME/.local/kitty.app/bin/kitty|g" $HOME/.local/share/applications/kitty*.desktop
-# End Kitty config

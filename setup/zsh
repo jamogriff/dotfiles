@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-# Idempotent: safe to re-run. Skips the oh-my-zsh install if ~/.oh-my-zsh already
-# exists (its own installer isn't idempotent — it errors out if that dir is there),
-# and skips the shell switch if zsh is already the default shell.
-
 if ! command -v zsh >/dev/null 2>&1; then
   sudo apt-get update
   sudo apt-get install -y zsh
@@ -16,32 +12,23 @@ ZSH_BIN="$(command -v zsh)" || {
 }
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  # KEEP_ZSHRC: leave any existing ~/.zshrc completely alone. Without this the
-  # installer *moves* it to ~/.zshrc.pre-oh-my-zsh and drops its own template in
-  # place — and since setup/packages runs before this script, that file already
-  # holds the nvm/rbenv/uv init lines those installers appended. Losing them is
-  # silent: zsh doesn't read ~/.profile, so those tools would simply vanish from
-  # interactive zsh. (Dropping the flag would also make the installer stop on a
-  # [Y/n] overwrite prompt, hanging an unattended `dotfiles bootstrap`.)
+  # KEEP_ZSHRC: without it the installer *moves* ~/.zshrc aside and drops in its
+  # own template, silently losing the nvm/rbenv/uv init lines already there (zsh
+  # doesn't read ~/.profile, so those tools would just vanish). It also stops on
+  # a [Y/n] prompt without the flag, hanging an unattended bootstrap.
   #
-  # The tradeoff is that the installer then never writes the lines that actually
-  # *load* oh-my-zsh, so we append them ourselves just below.
-  # RUNZSH=no/CHSH=no: this script handles the shell switch itself, below.
+  # The tradeoff: the installer then never writes the lines that *load*
+  # oh-my-zsh, so we append them ourselves below.
+  # RUNZSH=no/CHSH=no: this script handles the shell switch itself.
   KEEP_ZSHRC=yes RUNZSH=no CHSH=no sh -c \
     "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 else
   echo "oh-my-zsh already installed at ~/.oh-my-zsh, skipping."
 fi
 
-# Load oh-my-zsh. KEEP_ZSHRC above means the installer left ~/.zshrc untouched, so
-# without this block ~/.oh-my-zsh sits on disk fully installed and never gets
-# sourced — you get a bare zsh prompt and no `omz` command, which looks exactly
-# like the install having failed.
-#
-# ZSH_THEME matters: oh-my-zsh.sh only sources a theme if the variable is
-# non-empty, so leaving it unset gives you an unthemed prompt — the same symptom.
-# `plugins=` has to be assigned before oh-my-zsh.sh runs, which is why the whole
-# thing goes in as one block rather than being appended piecemeal.
+# Goes in as one block because `plugins=` and ZSH_THEME both have to be assigned
+# before oh-my-zsh.sh runs. An empty ZSH_THEME gets you an unthemed prompt, which
+# looks identical to the install having failed.
 if ! grep -qF 'oh-my-zsh.sh' "$HOME/.zshrc" 2>/dev/null; then
   cat >>"$HOME/.zshrc" <<'EOF'
 
@@ -55,15 +42,12 @@ else
   echo "oh-my-zsh already sourced from ~/.zshrc, skipping."
 fi
 
-# Source the .env symlink setup/desktop/config sets up at ~/.env (env vars like
-# INTELEPHENSE_LICENSE). Goes in last so anything exported there wins over
-# whatever the version managers or oh-my-zsh put on PATH above it.
+# Sources the ~/.env symlink setup/desktop/config creates. Last, so anything
+# exported there wins over the version managers and oh-my-zsh above it.
 #
-# This block was spelled ~/.local/.secrets before the config/ reorganization. On
-# a machine bootstrapped back then the grep below won't match that older block,
-# so this appends the new one and leaves the dead one in place — see the
-# migration notes in the README for removing it (and its now-dangling
-# ~/.local/.secrets symlink) by hand.
+# This block was spelled ~/.local/.secrets before the config/ reorganization; the
+# grep won't match that older one, so an already-bootstrapped machine ends up
+# with both. See the README's migration notes for removing the dead one.
 if ! grep -qF 'source $HOME/.env' "$HOME/.zshrc" 2>/dev/null; then
   cat >>"$HOME/.zshrc" <<'EOF'
 
@@ -77,13 +61,10 @@ else
   echo ".env sourcing already present in ~/.zshrc, skipping."
 fi
 
-# Fallback for a ~/.zshrc that got oh-my-zsh's own template some other way (an
-# earlier manual install, say) — the block above writes the right plugins itself,
-# so on a clean run this is a no-op. Only touches the line if it's still the
-# untouched fresh-install default (plugins=(git))
-# — the `plugins=` assignment has to run before `source $ZSH/oh-my-zsh.sh` to have any
-# effect, so this can't just be appended to the end of the file like the block above,
-# and an already-customized line is left alone rather than risk mangling it.
+# Fallback for a ~/.zshrc that got oh-my-zsh's template some other way — a no-op
+# on a clean run. Edited in place rather than appended, since `plugins=` only
+# takes effect before oh-my-zsh.sh is sourced. An already-customized line is left
+# alone rather than risk mangling it.
 if grep -qx 'plugins=(git)' "$HOME/.zshrc" 2>/dev/null; then
   sed -i 's/^plugins=(git)$/plugins=(git docker-compose docker)/' "$HOME/.zshrc"
   echo "Added docker/docker-compose to ~/.zshrc's oh-my-zsh plugins."
