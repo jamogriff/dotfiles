@@ -2,7 +2,7 @@
 #
 # The nvm/rbenv/uv installers each write their init snippet to the rc file they
 # auto-detect — always ~/.bashrc, since `dotfiles bootstrap` runs under bash — so
-# none of them reach zsh, which is the shell setup/zsh then makes the default.
+# none of them reach zsh, which is the shell src/install-zsh then makes the default.
 # Steering them at zsh instead is unreliable: rbenv derives the shell from
 # `ps -p $PPID` and overwrites what you pass it, and nvm honors $PROFILE only if
 # that file already exists, which ~/.zshrc doesn't yet.

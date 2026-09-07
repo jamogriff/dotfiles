@@ -1,7 +1,34 @@
 #!/usr/bin/env bash
-# Every call site in install-packages/install-zsh pipes curl's stdout straight
-# into `bash`/`sh` (the nvm/rbenv/uv/oh-my-zsh installers). Printing nothing
-# means that shell gets empty input and exits 0 immediately -- a real network
-# fetch never happens, and the actual "did this run" question is answered by
-# fixtures (nvm.sh/rbenv already being in place) rather than by what curl did.
+# Stand-in for curl: nothing here ever touches the network.
+#
+# Most call sites pipe curl's stdout straight into `bash`/`sh` (the
+# nvm/rbenv/uv/oh-my-zsh installers). Printing nothing means that shell gets
+# empty input and exits 0 immediately; whether those installers "ran" is
+# answered by fixtures being in place, not by what curl did.
+#
+# The two download forms do need a file to exist afterwards, so they fake one.
 echo "curl $*" >> "$MOCK_LOG"
+
+args=("$@")
+for i in "${!args[@]}"; do
+  case "${args[$i]}" in
+    # `curl ... -o <path>` — install-docker's GPG key fetch.
+    -o)
+      : > "${args[$((i + 1))]}"
+      exit 0
+      ;;
+    # `curl -LO <url>` — install-nvim's AppImage. The stand-in only has to
+    # answer --appimage-extract the way a real AppImage does.
+    *.appimage)
+      out="$(basename "${args[$i]}")"
+      cat > "$out" <<'APPIMAGE'
+#!/usr/bin/env bash
+mkdir -p squashfs-root
+printf '#!/usr/bin/env bash\necho "NVIM v0.12.5"\n' > squashfs-root/AppRun
+chmod +x squashfs-root/AppRun
+APPIMAGE
+      chmod +x "$out"
+      exit 0
+      ;;
+  esac
+done

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Fake uv for tests. install-version-managers calls this by absolute path
+# ($HOME/.local/bin/uv), so it has to be an executable. A version counts as
+# installed once a marker file for it exists, mirroring what `uv python find`
+# answers on a real install.
+ROOT="$HOME/.uv-versions"
+case "$1 $2" in
+  "python find")
+    [ -e "$ROOT/$3" ]
+    ;;
+  "python install")
+    mkdir -p "$ROOT"
+    touch "$ROOT/$3"
+    echo "uv python install ${*:3}" >> "$MOCK_LOG"
+    ;;
+  "python pin")
+    echo "uv python pin ${*:3}" >> "$MOCK_LOG"
+    ;;
+esac

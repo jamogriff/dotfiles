@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Only `--print-architecture` is ever asked for, and it has to answer the same
+# thing on any host so the expected sources.list line is fixed.
+echo amd64

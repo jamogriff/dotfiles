@@ -186,8 +186,8 @@ if not profile.is_tty() then
   vim.list_extend(plugins, {
     {
       -- Desktop-only: every LSP here needs a language runtime (Node, Ruby,
-      -- or Python) that setup/desktop/bootstrap-languages installs and a TTY
-      -- machine never gets (see setup/packages's comment on why). Loading
+      -- or Python) that src/install-version-managers puts on PATH and a TTY
+      -- machine never gets. Loading
       -- this on tty would have mason try to npm/gem install servers against
       -- runtimes that were never bootstrapped, and fail.
       'neovim/nvim-lspconfig',

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Group membership is real account state; install-docker's call is only ever
+# recorded, never made.
+echo "usermod $*" >> "$MOCK_LOG"

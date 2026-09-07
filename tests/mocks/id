@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# install-docker asks `id -nG` whether the user is already in the docker group.
+# $MOCK_USER_GROUPS is what the test sets to answer that.
+echo "${MOCK_USER_GROUPS:-user sudo}"

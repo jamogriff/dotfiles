@@ -5,8 +5,11 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # A throwaway $HOME per test, so scripts that write dotfiles never touch the real
 # one. $BATS_TEST_TMPDIR is created fresh before each test and deleted after.
+# Cleared rather than just created, so a test that calls this twice really does
+# get a second clean slate.
 fake_home() {
   export HOME="$BATS_TEST_TMPDIR/home"
+  rm -rf "$HOME"
   mkdir -p "$HOME"
 }
 
@@ -18,25 +21,48 @@ use_mocks() {
   # planted here is found first.
   export MOCK_BIN_DIR="$BATS_TEST_TMPDIR/mockbin"
   mkdir -p "$MOCK_BIN_DIR"
-  export PATH="$MOCK_BIN_DIR:$REPO_DIR/tests/mocks:$PATH"
+  export MOCKS_DIR="$REPO_DIR/tests/mocks"
+  export PATH="$MOCK_BIN_DIR:$MOCKS_DIR:$PATH"
   export MOCK_LOG="$BATS_TEST_TMPDIR/mock.log"
   : > "$MOCK_LOG"
 }
 
-# A replacement PATH built from scratch — an allowlist of real tools plus the
-# mocks, nothing else — for the one test that needs zsh to be genuinely
-# unreachable. Prepending mocks isn't enough: the host's own zsh is still further
-# down the inherited PATH.
-path_without_zsh() {
-  local shimdir="$BATS_TEST_TMPDIR/shims-no-zsh"
+# A throwaway repo root whose config/, scripts/, src/ and fonts/ point back at
+# the real ones. link-config takes $DOTFILES_DIR as its root, so this lets a
+# test add or omit a .env without touching the checkout the suite is running
+# from — which may well be someone's live dotfiles.
+fake_repo() {
+  export DOTFILES_DIR="$BATS_TEST_TMPDIR/repo"
+  mkdir -p "$DOTFILES_DIR"
+  local dir
+  for dir in config scripts src fonts; do
+    ln -sfn "$REPO_DIR/$dir" "$DOTFILES_DIR/$dir"
+  done
+}
+
+# A replacement PATH built from scratch -- an allowlist of real tools plus the
+# mocks, minus the one tool a test needs to be genuinely unreachable. Prepending
+# mocks isn't enough: the host's own copy is still further down the inherited
+# PATH, and tests/mocks may itself carry a stand-in for it.
+#
+# $MOCK_BIN_DIR stays in front, so a mock that plants a binary mid-run (apt-get
+# "installing" what was missing) still takes effect.
+path_without() {
+  local missing="$1"
+  local shimdir="$BATS_TEST_TMPDIR/shims-no-$missing"
   mkdir -p "$shimdir"
-  local tool
-  for tool in bash sh grep sed cat mkdir rm ln touch basename dirname printf cut chmod; do
-    local real
+
+  local tool real
+  for tool in bash sh grep sed cat cp mv mkdir rm ln touch basename dirname printf cut chmod; do
     real="$(command -v "$tool")" || continue
     ln -sf "$real" "$shimdir/$tool"
   done
-  echo "$shimdir:$MOCK_BIN_DIR:$REPO_DIR/tests/mocks"
+  for tool in "$MOCKS_DIR"/*; do
+    ln -sf "$tool" "$shimdir/$(basename "$tool")"
+  done
+  rm -f "$shimdir/$missing"
+
+  echo "$MOCK_BIN_DIR:$shimdir"
 }
 
 # --- config/ symlink assertions, shared by the two profile suites -----------

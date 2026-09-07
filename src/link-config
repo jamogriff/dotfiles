@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Symlinks this repo's config/, scripts/ and .env into $HOME for
+# $DOTFILES_PROFILE. Run by bootstrap on desktop and tty.
+# Safe to re-run: every destination is replaced outright, so a second run is a
+# no-op and a symlink someone overwrote with a real file gets repaired.
+#
+# Manual steps:
+#   1. ln -s "$PWD/config/nvim" ~/.config/nvim        # a directory -> ~/.config/<name>
+#   2. ln -s "$PWD/config/.gitconfig" ~/.gitconfig    # a file -> ~/<name>
+#   3. ln -s "$PWD/scripts/t" ~/.local/bin/t          # desktop; mac_display on tty
+#   4. ln -s "$PWD"/config/zsh/*.zsh ~/.oh-my-zsh/custom/   # file by file, not the dir
+#   5. ln -s "$PWD/.env" ~/.env
+#   6. cd fonts && unzip '*.zip' -x '*.txt' '*.md' -d ~/.fonts   # desktop only
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+
+source "$DOTFILES_DIR/src/lib/link.bash"
+source "$DOTFILES_DIR/src/lib/profile.bash"
+
+resolve_profile
+
+# The whole "which names does each profile get" table, in one place.
+case "$DOTFILES_PROFILE" in
+  desktop)
+    CONFIG_ENTRIES=(.gitconfig .ideavimrc .tmux.conf kitty nvim)
+    BIN_ENTRIES=(t)
+    LINK_FONTS=yes
+    ;;
+  tty)
+    CONFIG_ENTRIES=(.gitconfig nvim)
+    # Not on desktop: this drives an external display from a headless session.
+    BIN_ENTRIES=(mac_display)
+    LINK_FONTS=no
+    ;;
+esac
+
+for name in "${CONFIG_ENTRIES[@]}"; do
+  link_config "$name"
+done
+
+for name in "${BIN_ENTRIES[@]}"; do
+  link_bin "$name"
+done
+
+# Fonts are unzipped, not symlinked — the repo tracks the vendor's .zip and
+# ~/.fonts wants the font files themselves. -x drops the licence and readme the
+# archives carry alongside them.
+if [ "$LINK_FONTS" = yes ]; then
+  rm -rf "$HOME/.fonts"
+  cd "$DOTFILES_DIR/fonts"
+  unzip "*.zip" -x "*.txt" "*.md" -d "$HOME/.fonts"
+fi
+
+link_zsh_custom
+
+# Hand-written rather than driven by link_config: ~/.env isn't the identity
+# mapping flat config/ entries use, and .env is git-ignored so a fresh clone
+# doesn't have one. install-zsh is what sources it from ~/.zshrc.
+if [ -f "$DOTFILES_DIR/.env" ]; then
+  rm -f "$HOME/.env"
+  ln -s "$DOTFILES_DIR/.env" "$HOME/.env"
+  echo "Linked $HOME/.env -> $DOTFILES_DIR/.env"
+else
+  echo 'WARNING: no .env in the repo root; copy .env.example to .env to set machine-specific env vars'
+fi

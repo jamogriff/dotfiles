@@ -1,186 +1,60 @@
 #!/usr/bin/env bash
 #
-# Single entrypoint for every setup script in this repo.
-# Usage: dotfiles <command> [target] — run `dotfiles help` for the list.
+# Runs the scripts in src/, either one at a time or as a bootstrap sequence.
+# Everything in src/ also runs standalone; this is the convenience wrapper.
 
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+export DOTFILES_DIR
+
+source "$DOTFILES_DIR/src/lib/profile.bash"
 
 usage() {
-  cat <<EOF
-Usage: dotfiles <command> [target]
+  cat <<'MSG'
+Usage: dotfiles <command>
 
-Bootstrap (one-time; pick the one matching the machine):
-  bootstrap desktop         full desktop setup: packages, zsh, languages,
-                            terminal, config, nvim
-  bootstrap tty             full tty setup: packages, zsh, config, nvim
-                            (no languages, no terminal — see README)
+  bootstrap          run the full first-time sequence for $DOTFILES_PROFILE
+  <script-name>      run one script from src/, e.g. `dotfiles install-docker`
+  help               show this message
 
-Install (piecewise; re-run any time):
-  install terminal          install the Kitty terminal (desktop only)
-  install nvim              install the Neovim AppImage
-
-Sync (reconcile symlinks; re-run any time):
-  sync config               symlink everything in config/ for whichever
-                            profile this machine was bootstrapped with
-
-  help                      show this message
-
-Examples:
-  dotfiles bootstrap desktop
-  dotfiles sync config
-EOF
+Profile is read from DOTFILES_PROFILE, or from .env in the repo root.
+MSG
 }
 
-# Not exposed as `install` subcommands: re-running either by hand is a no-op at
-# best, or re-trips install-time branching (oh-my-zsh, the default-shell switch).
-install_packages() {
-  echo "==> Installing shared OS packages"
-  bash "$DOTFILES_DIR/setup/packages"
-}
-
-install_zsh() {
-  echo "==> Installing zsh + oh-my-zsh"
-  bash "$DOTFILES_DIR/setup/zsh"
-}
-
-install_terminal() {
-  echo "==> Installing Kitty terminal (desktop only)"
-  bash "$DOTFILES_DIR/setup/desktop/terminal"
-}
-
-# Reads the same ~/.dotfiles-profile marker as config/nvim/lua/user/profile.lua.
-# A missing or unrecognized value is fatal here rather than defaulting to
-# desktop like profile.lua does: guessing wrong would symlink a desktop config
-# (kitty, fonts) onto a tty box.
-current_profile() {
-  local profile_file="$HOME/.dotfiles-profile"
-
-  if [ ! -f "$profile_file" ]; then
-    echo "sync config: no $profile_file — this machine hasn't been bootstrapped yet. Run 'dotfiles bootstrap desktop' or 'dotfiles bootstrap tty' first." >&2
-    return 1
-  fi
-
-  local profile
-  profile="$(cat "$profile_file")"
-  case "$profile" in
-    desktop|tty) echo "$profile" ;;
-    *)
-      echo "sync config: $profile_file says '$profile', which isn't 'desktop' or 'tty'. Fix that file, or re-run 'dotfiles bootstrap <profile>'." >&2
-      return 1
-      ;;
-  esac
-}
-
-# Takes the profile as an argument rather than calling current_profile itself:
-# bootstrap runs this before the marker file it reads exists.
-sync_config() {
-  local target="$1"
-  case "$target" in
-    desktop|tty) ;;
-    *)
-      echo "sync config: target must be 'desktop' or 'tty', got '$target'" >&2
-      return 1
-      ;;
-  esac
-
-  echo "==> Syncing config symlinks ($target profile)"
-  bash "$DOTFILES_DIR/setup/$target/config"
-}
-
-install_nvim() {
-  echo "==> Installing Neovim"
-  bash "$DOTFILES_DIR/setup/nvim"
-}
-
-# Desktop-only, heavy (a from-source Ruby build), and fresh-install only. Once a
-# machine has runtimes, switching versions is nvm/rbenv/uv's job directly.
-bootstrap_languages() {
-  echo "==> Bootstrapping language runtimes (desktop only)"
-  bash "$DOTFILES_DIR/setup/desktop/bootstrap-languages"
-}
-
+# Ordering: zsh before link-config so link_zsh_custom finds ~/.oh-my-zsh, and
+# docker after nvim so an unreachable Docker repo still leaves you an editor.
 bootstrap() {
-  local target="$1"
-  case "$target" in
-    desktop|tty) ;;
-    *)
-      echo "bootstrap: target must be 'desktop' or 'tty', got '$target'" >&2
-      return 1
-      ;;
+  local steps
+  case "$DOTFILES_PROFILE" in
+    desktop) steps=(install-packages install-zsh install-version-managers install-kitty install-nvim install-docker link-config) ;;
+    tty)     steps=(install-zsh install-nvim install-docker link-config) ;;
   esac
 
-  install_packages
-  install_zsh
-  case "$target" in
-    desktop)
-      bootstrap_languages
-      install_terminal
-      sync_config desktop
-      ;;
-    tty)
-      sync_config tty
-      ;;
-  esac
-  install_nvim
-  echo "==> $target bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
+  local step
+  for step in "${steps[@]}"; do
+    echo "==> $step"
+    bash "$DOTFILES_DIR/src/$step"
+  done
+
+  echo "==> $DOTFILES_PROFILE bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
 }
 
 cmd="${1:-help}"
-sub="${2:-}"
 
 case "$cmd" in
-  bootstrap)
-    case "$sub" in
-      desktop|tty) bootstrap "$sub" ;;
-      *)
-        echo "Unknown bootstrap target: '$sub'" >&2
-        usage
-        exit 1
-        ;;
-    esac
-    ;;
-  install)
-    case "$sub" in
-      terminal) install_terminal ;;
-      nvim)     install_nvim ;;
-      config)
-        # Named explicitly rather than falling through to "Unknown install
-        # target", which would read as the command having been dropped.
-        echo "install config: renamed — it installs nothing. Use 'dotfiles sync config'." >&2
-        exit 1
-        ;;
-      *)
-        echo "Unknown install target: '$sub'" >&2
-        usage
-        exit 1
-        ;;
-    esac
-    ;;
-  sync)
-    case "$sub" in
-      config)
-        # Rejected rather than ignored: accepting the old `install config
-        # desktop` spelling would look like the argument still picks the profile.
-        if [ -n "${3:-}" ]; then
-          echo "sync config: takes no target — the profile comes from ~/.dotfiles-profile (got '$3')" >&2
-          exit 1
-        fi
-        profile="$(current_profile)" || exit 1
-        sync_config "$profile"
-        ;;
-      *)
-        echo "Unknown sync target: '$sub'" >&2
-        usage
-        exit 1
-        ;;
-    esac
-    ;;
   help|-h|--help)
     usage
     ;;
+  bootstrap)
+    # Resolved up front so a missing profile fails before anything installs.
+    resolve_profile
+    bootstrap
+    ;;
   *)
+    if [ -f "$DOTFILES_DIR/src/$cmd" ] && [ -x "$DOTFILES_DIR/src/$cmd" ]; then
+      exec bash "$DOTFILES_DIR/src/$cmd"
+    fi
     echo "Unknown command: '$cmd'" >&2
     usage
     exit 1
