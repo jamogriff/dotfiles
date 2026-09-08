@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Installs Neovim from the upstream AppImage, extracted under ~/.local/nvim-app
+# and symlinked to ~/.local/bin/nvim. Run by bootstrap on desktop and tty.
+# Safe to re-run: skips everything if ~/.local/bin/nvim already reports
+# $NVIM_VERSION.
+#
+# Manual steps:
+#   1. sudo apt-get install -y curl
+#   2. cd ~/.local/bin && curl -LO <APPIMAGE_URL>
+#   3. chmod u+x nvim-linux-x86_64.appimage
+#   4. ./nvim-linux-x86_64.appimage --appimage-extract   # avoids needing FUSE
+#   5. mv squashfs-root ~/.local/nvim-app && ln -s ~/.local/nvim-app/AppRun ~/.local/bin/nvim
+#   6. nvim --version
+#
+# Fetches: https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage
+set -euo pipefail
+
+NVIM_VERSION=v0.12.5
+APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage"
+LOCAL_BIN="$HOME/.local/bin"
+NVIM_APPIMAGE="$LOCAL_BIN/nvim-linux-x86_64.appimage"
+NVIM_EXTRACTED="$HOME/.local/nvim-app"
+
+if [ -x "$LOCAL_BIN/nvim" ] && [[ "$("$LOCAL_BIN/nvim" --version)" == *"NVIM $NVIM_VERSION"* ]]; then
+  echo "Neovim $NVIM_VERSION already installed, skipping."
+  exit 0
+fi
+
+# bootstrap doesn't run install-packages on tty, so curl isn't guaranteed.
+if ! command -v curl >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y curl
+fi
+
+mkdir -p "$LOCAL_BIN"
+rm -f "$LOCAL_BIN/nvim"
+rm -rf "$NVIM_EXTRACTED"
+
+cd "$LOCAL_BIN"
+curl -LO "$APPIMAGE_URL"
+chmod u+x "$NVIM_APPIMAGE"
+
+# Extracted rather than run in place: the AppImage needs FUSE, which a bare
+# server install often doesn't have.
+"$NVIM_APPIMAGE" --appimage-extract
+mv squashfs-root "$NVIM_EXTRACTED"
+ln -s "$NVIM_EXTRACTED/AppRun" "$LOCAL_BIN/nvim"
+
+echo "✅ Neovim installed and symlinked to 'nvim'."

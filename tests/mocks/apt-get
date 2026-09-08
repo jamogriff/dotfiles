@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Stand-in for the real apt-get: never touch the system package DB in a test.
+echo "apt-get $*" >> "$MOCK_LOG"
+
+# install-zsh and install-nvim both run `command -v <pkg>` around the install
+# they just asked for. A real apt-get would have put the binary on PATH by now,
+# so for those two packages this fakes that one side effect. Nothing else the
+# install scripts pull in is ever checked for afterwards.
+for arg in "$@"; do
+  case "$arg" in
+    zsh)
+      printf '#!/usr/bin/env bash\n' > "$MOCK_BIN_DIR/zsh"
+      chmod +x "$MOCK_BIN_DIR/zsh"
+      ;;
+    curl)
+      cp "$MOCKS_DIR/curl" "$MOCK_BIN_DIR/curl"
+      ;;
+  esac
+done

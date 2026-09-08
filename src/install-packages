@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# apt-installs the OS-level packages the desktop profile expects on $PATH.
+# Run by bootstrap on desktop only; tty deliberately goes without them.
+# Safe to re-run: it is one apt-get install, so a second run just re-checks.
+#
+# Manual steps:
+#   1. sudo apt-get update
+#   2. sudo apt-get install -y xclip tmux curl unzip fzf ripgrep
+set -euo pipefail
+
+# zsh has its own step (src/install-zsh) since installing it is only half the
+# job; the language toolchains live in src/install-version-managers.
+PACKAGES=(xclip tmux curl unzip fzf ripgrep)
+
+sudo apt-get update
+sudo apt-get install -y "${PACKAGES[@]}"

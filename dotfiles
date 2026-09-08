@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# Runs the scripts in src/, either one at a time or as a bootstrap sequence.
+# Everything in src/ also runs standalone; this is the convenience wrapper.
+
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+export DOTFILES_DIR
+
+source "$DOTFILES_DIR/src/lib/profile.bash"
+
+usage() {
+  cat <<'MSG'
+Usage: dotfiles <command>
+
+  bootstrap          run the full first-time sequence for $DOTFILES_PROFILE
+  <script-name>      run one script from src/, e.g. `dotfiles install-docker`
+  help               show this message
+
+Profile is read from DOTFILES_PROFILE, or from .env in the repo root.
+MSG
+}
+
+# Ordering: zsh before link-config so link_zsh_custom finds ~/.oh-my-zsh, and
+# docker after nvim so an unreachable Docker repo still leaves you an editor.
+bootstrap() {
+  local steps
+  case "$DOTFILES_PROFILE" in
+    desktop) steps=(install-packages install-zsh install-version-managers install-kitty install-nvim install-docker link-config) ;;
+    tty)     steps=(install-zsh install-nvim install-docker link-config) ;;
+  esac
+
+  local step
+  for step in "${steps[@]}"; do
+    echo "==> $step"
+    bash "$DOTFILES_DIR/src/$step"
+  done
+
+  echo "==> $DOTFILES_PROFILE bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
+}
+
+cmd="${1:-help}"
+
+case "$cmd" in
+  help|-h|--help)
+    usage
+    ;;
+  bootstrap)
+    # Resolved up front so a missing profile fails before anything installs.
+    resolve_profile
+    bootstrap
+    ;;
+  *)
+    if [ -f "$DOTFILES_DIR/src/$cmd" ] && [ -x "$DOTFILES_DIR/src/$cmd" ]; then
+      exec bash "$DOTFILES_DIR/src/$cmd"
+    fi
+    echo "Unknown command: '$cmd'" >&2
+    usage
+    exit 1
+    ;;
+esac

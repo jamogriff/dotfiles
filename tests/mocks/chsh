@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Should never actually be reached given the getent mock above; this exists
+# purely as a safety net so a real `chsh` call is structurally impossible.
+echo "chsh $*" >> "$MOCK_LOG"

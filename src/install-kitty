@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Installs the Kitty terminal under ~/.local/kitty.app and registers its
+# desktop entries. Run by bootstrap on desktop only.
+# Safe to re-run: it tears the previous install down first, so a re-run is a
+# clean reinstall of whatever the vendor installer currently ships.
+#
+# Manual steps:
+#   1. curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
+#   2. sudo ln -s ~/.local/kitty.app/bin/kitty /usr/local/bin/kitty
+#   3. cp ~/.local/kitty.app/share/applications/kitty*.desktop ~/.local/share/applications/
+#   4. In those two files, point Icon= and Exec= at ~/.local/kitty.app instead
+#      of a bare `kitty`, which isn't where we put it.
+#
+# Fetches: https://sw.kovidgoyal.net/kitty/installer.sh
+set -euo pipefail
+
+sudo rm -f /usr/local/bin/kitty
+rm -rf "$HOME/.config/kitty"  # link-config puts the symlink back
+rm -rf "$HOME/.local/kitty.app"
+
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
+
+sudo ln -s "$HOME/.local/kitty.app/bin/kitty" /usr/local/bin/kitty
+
+mkdir -p "$HOME/.local/share/applications"
+cp "$HOME/.local/kitty.app/share/applications/kitty.desktop" "$HOME/.local/share/applications/"
+# kitty-open.desktop is what lets a file manager open text/images in kitty
+cp "$HOME/.local/kitty.app/share/applications/kitty-open.desktop" "$HOME/.local/share/applications/"
+
+# The vendor's .desktop files reference a bare `kitty`, which isn't where we put it
+sed -i "s|Icon=kitty|Icon=$HOME/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" "$HOME"/.local/share/applications/kitty*.desktop
+sed -i "s|Exec=kitty|Exec=$HOME/.local/kitty.app/bin/kitty|g" "$HOME"/.local/share/applications/kitty*.desktop

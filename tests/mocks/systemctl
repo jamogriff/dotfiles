@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# install-docker must never reach this: enabling the service is a documented
+# manual step, not something bootstrap does.
+echo "systemctl $*" >> "$MOCK_LOG"

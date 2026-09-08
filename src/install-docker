@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Installs Docker Engine and the Compose plugin from Docker's own apt
+# repository. Run by bootstrap on desktop and tty.
+# Safe to re-run: the keyring, the sources list and the docker group membership
+# are each guarded on their own state, so a second run only re-checks apt.
+#
+# It deliberately does not enable or start the service — that's a per-machine
+# decision. Afterwards: `sudo systemctl enable --now docker`, then log out and
+# back in for the group change.
+#
+# Manual steps:
+#   1. sudo apt-get install -y ca-certificates curl
+#   2. sudo install -m 0755 -d /etc/apt/keyrings && sudo curl -fsSL \
+#        https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+#   3. echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+#        https://download.docker.com/linux/ubuntu <codename> stable" \
+#        | sudo tee /etc/apt/sources.list.d/docker.list
+#   4. sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli \
+#        containerd.io docker-buildx-plugin docker-compose-plugin
+#   5. sudo usermod -aG docker "$USER"
+#
+# Fetches: https://download.docker.com/linux/ubuntu/gpg
+set -euo pipefail
+
+# Rooted at $ETC_DIR so the test suite can point the lot at a scratch tree.
+ETC_DIR="${ETC_DIR:-/etc}"
+KEYRING="$ETC_DIR/apt/keyrings/docker.asc"
+SOURCES_LIST="$ETC_DIR/apt/sources.list.d/docker.list"
+PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+
+# Docker publishes per-Ubuntu-release repos, and Pop!_OS reports ID=pop with its
+# own VERSION_CODENAME — so UBUNTU_CODENAME is what names a repo that exists.
+# shellcheck disable=SC1091
+. "$ETC_DIR/os-release"
+CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
+if [ -z "$CODENAME" ]; then
+  echo "install-docker: $ETC_DIR/os-release sets neither UBUNTU_CODENAME nor VERSION_CODENAME, so there's no Docker repo to point at." >&2
+  exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl
+fi
+
+if [ -f "$KEYRING" ]; then
+  echo "$KEYRING already present, skipping."
+else
+  sudo install -m 0755 -d "$(dirname "$KEYRING")"
+  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o "$KEYRING"
+  sudo chmod a+r "$KEYRING"
+  echo "Wrote $KEYRING."
+fi
+
+REPO_LINE="deb [arch=$(dpkg --print-architecture) signed-by=$KEYRING] https://download.docker.com/linux/ubuntu $CODENAME stable"
+if [ "$(cat "$SOURCES_LIST" 2>/dev/null)" = "$REPO_LINE" ]; then
+  echo "$SOURCES_LIST already points at the $CODENAME repo, skipping."
+else
+  echo "$REPO_LINE" | sudo tee "$SOURCES_LIST" >/dev/null
+  echo "Wrote $SOURCES_LIST for $CODENAME."
+fi
+
+sudo apt-get update
+sudo apt-get install -y "${PACKAGES[@]}"
+
+if [[ " $(id -nG "$USER") " == *" docker "* ]]; then
+  echo "$USER is already in the docker group, skipping."
+else
+  sudo usermod -aG docker "$USER"
+  echo "Added $USER to the docker group."
+fi
+
+cat <<'MSG'
+
+Docker is installed but not running: this script doesn't touch systemd.
+  sudo systemctl enable --now docker
+Then log out and back in so the docker group membership applies.
+MSG
