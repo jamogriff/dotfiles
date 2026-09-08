@@ -146,11 +146,11 @@ link_config_for() {
 
 @test "replaces a stale zsh custom symlink instead of erroring" {
   mkdir -p "$HOME/.oh-my-zsh/custom"
-  ln -s /nonexistent/aliases.zsh "$HOME/.oh-my-zsh/custom/aliases.zsh"
+  ln -s /nonexistent/custom.zsh "$HOME/.oh-my-zsh/custom/custom.zsh"
 
   run link_config_for desktop
   [ "$status" -eq 0 ]
-  [ "$HOME/.oh-my-zsh/custom/aliases.zsh" -ef "$REPO_DIR/config/zsh/aliases.zsh" ]
+  [ "$HOME/.oh-my-zsh/custom/custom.zsh" -ef "$REPO_DIR/config/zsh/custom.zsh" ]
 }
 
 @test "skips zsh custom symlinks, and does not create ~/.oh-my-zsh, when it is absent" {

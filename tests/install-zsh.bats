@@ -40,74 +40,25 @@ setup() {
   ! grep -q "ohmyzsh" "$MOCK_LOG"
 }
 
-@test "appends the oh-my-zsh bootstrap block to a fresh .zshrc" {
+@test "lets the oh-my-zsh installer write ~/.zshrc from its own template" {
   run bash "$REPO_DIR/src/install-zsh"
   [ "$status" -eq 0 ]
   grep -qF 'source $ZSH/oh-my-zsh.sh' "$HOME/.zshrc"
 }
 
-@test "does not duplicate the bootstrap block on a second run" {
+@test "runs the oh-my-zsh installer without KEEP_ZSHRC" {
+  run bash "$REPO_DIR/src/install-zsh"
+  [ "$status" -eq 0 ]
+  ! grep -q 'KEEP_ZSHRC' "$MOCK_LOG"
+}
+
+@test "does not re-run the oh-my-zsh installer, or touch ~/.zshrc again, on a second run" {
   bash "$REPO_DIR/src/install-zsh"
-  run bash "$REPO_DIR/src/install-zsh"
-  [ "$status" -eq 0 ]
-  # Exactly one matching line, not two.
-  [ "$(grep -cF 'oh-my-zsh.sh' "$HOME/.zshrc")" -eq 1 ]
-}
+  local before
+  before="$(cat "$HOME/.zshrc")"
 
-@test "appends the .env sourcing block to a fresh .zshrc" {
   run bash "$REPO_DIR/src/install-zsh"
   [ "$status" -eq 0 ]
-  grep -qxF 'if [ -f $HOME/.env ]; then' "$HOME/.zshrc"
-  grep -qxF '    source $HOME/.env' "$HOME/.zshrc"
-}
-
-@test "does not duplicate the .env sourcing block on a second run" {
-  bash "$REPO_DIR/src/install-zsh"
-  run bash "$REPO_DIR/src/install-zsh"
-  [ "$status" -eq 0 ]
-  # A correct single append already counts 2 lines mentioning $HOME/.env (the
-  # guard and the source), so only one specific line proves it wasn't doubled.
-  [ "$(grep -cxF '    source $HOME/.env' "$HOME/.zshrc")" -eq 1 ]
-}
-
-@test "appends the .env block to a .zshrc still carrying the old .secrets one" {
-  # The pre-config/ spelling: on a re-run the new block must go in rather than
-  # the old one being mistaken for it. Removing the dead one is a manual step.
-  cat > "$HOME/.zshrc" <<'EOF'
-if [ -f $HOME/.local/.secrets ]; then
-    source $HOME/.local/.secrets
-fi
-EOF
-  run bash "$REPO_DIR/src/install-zsh"
-  [ "$status" -eq 0 ]
-  grep -qxF '    source $HOME/.env' "$HOME/.zshrc"
-}
-
-@test "adds docker plugins to a bare plugins=(git) line left by another source" {
-  # Our bootstrap block already present, but alongside oh-my-zsh's own
-  # untouched default plugins line -- what the script's fallback is for.
-  cat > "$HOME/.zshrc" <<'EOF'
-plugins=(git)
-source $ZSH/oh-my-zsh.sh
-if [ -f $HOME/.env ]; then
-    source $HOME/.env
-fi
-EOF
-  run bash "$REPO_DIR/src/install-zsh"
-  [ "$status" -eq 0 ]
-  grep -qx 'plugins=(git docker-compose docker)' "$HOME/.zshrc"
-}
-
-@test "leaves a customized plugins= line alone" {
-  cat > "$HOME/.zshrc" <<'EOF'
-plugins=(git rust)
-source $ZSH/oh-my-zsh.sh
-if [ -f $HOME/.env ]; then
-    source $HOME/.env
-fi
-EOF
-  run bash "$REPO_DIR/src/install-zsh"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"leaving it as-is"* ]]
-  grep -qx 'plugins=(git rust)' "$HOME/.zshrc"
+  [[ "$output" == *"already installed at ~/.oh-my-zsh, skipping."* ]]
+  [ "$(cat "$HOME/.zshrc")" = "$before" ]
 }

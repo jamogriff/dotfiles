@@ -1,43 +1,30 @@
-# dotfiles
-$HOME sweet $HOME (inspired by Jess Archer)
+# $HOME sweet $HOME (inspired by Jess Archer) 
+
+This repo is a highly curated collection of config files and installation scripts that reliably setup a functioning development machine or server in less than a minute.
+It includes an aesthetic font (IBM Plex Mono), zsh, a terminal (kitty), NeoVim with plugins and LSPs, and version managers for Node (nvm), Python (uv) and Ruby (rbenv). 
+Additionally, Node 24 and Python 3.14 are installed and ready to go after running the `bootstrap` script.
+
+**Note:** This was designed for use on Debian/Ubuntu/PopOS machines, so several scripts call `apt-get` to download dependencies.
+It likely could be easily ported to other flavors of Linux/Unix just by replacing the `apt-get` usages with your distro's package manager (and changing the `apt-get` mock in `tests`).
 
 ## Get Started
 
-Two profiles (**Linux only!**), scoped very differently on purpose:
+Two profiles, scoped very differently on purpose:
 
 - **Desktop** — a full dev environment: version managers, LSPs, every editor plugin, a GUI
   terminal.
 - **TTY** — minimal, for servers: zsh and nvim as a plain editor, plus Docker.
 
-On a fresh machine:
+On a fresh machine: Copy `.env.example` to `.env` and set `DOTFILES_PROFILE` to `tty` or `desktop` (default) and run `./dotfiles bootstrap`.
 
-```
-cp .env.example .env
-$EDITOR .env          # set DOTFILES_PROFILE to desktop or tty
-./dotfiles bootstrap
-```
-
-Then launch `nvim`. On desktop, `lazy.nvim` installs every plugin and `mason.nvim` installs the
+Assuming all goes well, you can restart your machine and it will drop you into zsh (oh my zsh!).
+Launch `nvim` next. On desktop, `lazy.nvim` installs every plugin and `mason.nvim` installs the
 configured language servers — see [Using lazy.nvim and mason.nvim](#using-lazynvim-and-masonnvim).
-On tty you get the editor and its core plugins; mason/lspconfig aren't loaded on that profile at
-all.
+On tty you get the editor and its core plugins.
 
 Two things bootstrap deliberately leaves to you: `sudo systemctl enable --now docker` (and a
 re-login for the `docker` group), and installing a Ruby — see [System Prereq's](#system-prereqs).
 
-**Notes:**
-- You'll likely need to set `export TERM=xterm-256color` in your `~/.zshrc` file.
-
-### Profiles: `DOTFILES_PROFILE`
-
-Which profile a machine is, is one environment variable, `desktop` or `tty`. It lives in `.env`
-at the repo root (symlinked to `~/.env` and sourced by `~/.zshrc`), and every script that branches
-on it — plus `config/nvim/lua/user/profile.lua` — reads that one value. Exporting it inline
-overrides `.env` for a single run:
-
-```
-DOTFILES_PROFILE=tty ./dotfiles bootstrap
-```
 
 ### Script Layout
 
@@ -47,7 +34,7 @@ arguments:
 ```
 src/
   install-packages          # apt: xclip tmux curl unzip fzf ripgrep    (desktop)
-  install-zsh               # zsh + oh-my-zsh + ~/.zshrc block + chsh   (both)
+  install-zsh               # zsh + oh-my-zsh (vendor defaults) + chsh   (both)
   install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
   install-kitty             # Kitty terminal + .desktop entries         (desktop)
   install-fonts             # IBM Plex Mono Nerd Font into ~/.fonts     (desktop)
@@ -73,12 +60,6 @@ machine's profile:
 | 7 | `install-docker` | `install-docker` |
 | 8 | `link-config` | `link-config` |
 
-zsh comes before `link-config` so the `$ZSH_CUSTOM` symlinks have somewhere to go, and Docker
-comes after nvim so an unreachable Docker repo still leaves you an editor.
-
-Each script opens with a header comment that doubles as a recipe: what it installs, what makes it
-safe to re-run, and the handful of commands you'd type to do it by hand. When the automation rots,
-that's what gets used — so a change to a script updates its recipe in the same commit.
 
 ### The `config/` directory
 
@@ -100,6 +81,14 @@ decided by its shape rather than a per-file list:
 
 `config/zsh/` is the one real exception: oh-my-zsh sources each `*.zsh` file in `$ZSH_CUSTOM`
 individually, so those get linked file by file rather than as a directory.
+
+`install-zsh` does **not** preserve `~/.zshrc`. It runs the oh-my-zsh installer without
+`KEEP_ZSHRC`, so any existing `~/.zshrc` is renamed to `~/.zshrc.pre-oh-my-zsh` and replaced
+with oh-my-zsh's own default template the next time the installer actually runs (i.e., if
+`~/.oh-my-zsh` doesn't already exist). Anything you want to survive that — theme, plugins,
+aliases, functions, `.env` sourcing — belongs in `config/zsh/custom.zsh`, which is symlinked into
+`$ZSH_CUSTOM` and auto-sourced by oh-my-zsh on every shell start, regardless of what's in
+`~/.zshrc`.
 
 Which *names* each profile gets is the single `case` block at the top of `src/link-config`.
 Adding something to `config/` means adding it to at least one branch; `tests/link-config.bats`
@@ -127,7 +116,7 @@ a symlink doesn't exist yet and only a re-run creates it:
 `.env` at the repo root holds `DOTFILES_PROFILE` and machine-specific values like
 `INTELEPHENSE_LICENSE`. It's git-ignored; `.env.example` is the committed template. Every line
 needs `export` — nvim reads these from its environment, and a bare assignment sourced by
-`~/.zshrc` is a shell variable, not an exported one.
+`config/zsh/custom.zsh` is a shell variable, not an exported one.
 
 ```
 cp .env.example .env
@@ -135,8 +124,8 @@ $EDITOR .env
 ./dotfiles link-config
 ```
 
-`src/link-config` symlinks it to `~/.env` on both profiles, and `src/install-zsh` adds the block
-sourcing it from `~/.zshrc`.
+`src/link-config` symlinks it to `~/.env` on both profiles, and `config/zsh/custom.zsh` sources
+it on every shell start.
 
 ## System Prereq's
 

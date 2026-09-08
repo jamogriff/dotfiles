@@ -2,9 +2,10 @@
 # Stand-in for curl: nothing here ever touches the network.
 #
 # Most call sites pipe curl's stdout straight into `bash`/`sh` (the
-# nvm/rbenv/uv/oh-my-zsh installers). Printing nothing means that shell gets
-# empty input and exits 0 immediately; whether those installers "ran" is
-# answered by fixtures being in place, not by what curl did.
+# nvm/rbenv/uv installers). Printing nothing means that shell gets empty input
+# and exits 0 immediately; whether those installers "ran" is answered by
+# fixtures being in place, not by what curl did. oh-my-zsh's installer is the
+# exception below — its side effect (writing ~/.zshrc) is itself under test.
 #
 # The two download forms do need a file to exist afterwards, so they fake one.
 echo "curl $*" >> "$MOCK_LOG"
@@ -12,6 +13,13 @@ echo "curl $*" >> "$MOCK_LOG"
 args=("$@")
 for i in "${!args[@]}"; do
   case "${args[$i]}" in
+    # `curl -fsSL <url>` piped into `sh -c` by install-zsh — the one piped
+    # install that's actually asserted on, so it gets a real fixture script
+    # rather than the empty-output default the rest fall through to.
+    *ohmyzsh*install.sh*)
+      cat "$MOCKS_DIR/../fixtures/oh-my-zsh/install.sh"
+      exit 0
+      ;;
     # `curl ... -o <path>` — install-docker's GPG key fetch.
     -o)
       : > "${args[$((i + 1))]}"
