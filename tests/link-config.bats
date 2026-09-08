@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
-# Exercises the real src/link-config for both profiles -- just symlinks and a
-# font unzip, so safe to run against a throwaway $HOME.
+# Exercises the real src/link-config for both profiles -- symlinks and nothing
+# else, so safe to run against a throwaway $HOME.
 #
 # Assertions are driven off SYNCED/NOT_SYNCED rather than hand-written per
 # target: that's what makes an unwired config/ entry a failure, not a no-op.
@@ -48,14 +48,13 @@ link_config_for() {
   assert_all_entries_accounted_for "$TTY_SYNCED" "$TTY_NOT_SYNCED"
 }
 
-@test "tty links neither the desktop-only entries nor the fonts" {
+@test "tty links none of the desktop-only entries" {
   run link_config_for tty
   [ "$status" -eq 0 ]
 
   assert_not_linked kitty
   assert_not_linked .ideavimrc
   assert_not_linked .tmux.conf
-  [ ! -d "$HOME/.fonts" ]
 }
 
 @test "desktop links scripts/t, tty links scripts/mac_display, neither links both" {
@@ -69,15 +68,6 @@ link_config_for() {
   [ "$status" -eq 0 ]
   [ "$HOME/.local/bin/mac_display" -ef "$REPO_DIR/scripts/mac_display" ]
   [ ! -e "$HOME/.local/bin/t" ]
-}
-
-@test "desktop unpacks the fonts zip into ~/.fonts" {
-  run link_config_for desktop
-  [ "$status" -eq 0 ]
-
-  # Unzipped rather than symlinked -- the one thing here that isn't a link.
-  [ -d "$HOME/.fonts" ]
-  [ ! -L "$HOME/.fonts" ]
 }
 
 @test "replaces a real file or directory sitting at a destination path" {

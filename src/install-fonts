@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Installs the IBM Plex Mono Nerd Font into ~/.fonts from the upstream
+# nerd-fonts release. Run by bootstrap on desktop only.
+# Safe to re-run: skips everything if ~/.fonts already reports $FONT_VERSION.
+#
+# Manual steps:
+#   1. curl -L -o /tmp/IBMPlexMono.zip <FONT_URL>
+#   2. rm -rf ~/.fonts
+#   3. unzip /tmp/IBMPlexMono.zip 'BlexMonoNerdFontMono-*.ttf' -d ~/.fonts
+#   4. fc-cache -f ~/.fonts
+#
+# Fetches: https://github.com/ryanoasis/nerd-fonts/releases/download/$FONT_VERSION/IBMPlexMono.zip
+set -euo pipefail
+
+FONT_VERSION=v3.4.0
+FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/$FONT_VERSION/IBMPlexMono.zip"
+FONTS_DIR="$HOME/.fonts"
+# kitty is the only consumer and wants the Mono variant; the archive also
+# carries NerdFont and NerdFontPropo faces nothing here asks for.
+FONT_GLOB='BlexMonoNerdFontMono-*.ttf'
+# The faces carry no version anywhere fontconfig can read, so the install
+# stamps one. Its absence is also what reinstalls over a pre-v3 ~/.fonts.
+VERSION_FILE="$FONTS_DIR/.nerd-font-version"
+
+if [ -f "$VERSION_FILE" ] && [ "$(cat "$VERSION_FILE")" = "$FONT_VERSION" ]; then
+  echo "Nerd Font $FONT_VERSION already installed, skipping."
+  exit 0
+fi
+
+# A temp dir rather than the repo: the archive is upstream's, not ours, and
+# has no business in the working tree.
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+curl -L -o "$tmp/IBMPlexMono.zip" "$FONT_URL"
+
+# Wiped rather than merged: v2 named its faces entirely differently, so the
+# stale ones would sit alongside the new set forever.
+rm -rf "$FONTS_DIR"
+unzip "$tmp/IBMPlexMono.zip" "$FONT_GLOB" -d "$FONTS_DIR"
+echo "$FONT_VERSION" > "$VERSION_FILE"
+
+fc-cache -f "$FONTS_DIR"
+
+echo "✅ IBM Plex Mono Nerd Font $FONT_VERSION installed to $FONTS_DIR."

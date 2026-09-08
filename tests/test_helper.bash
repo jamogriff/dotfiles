@@ -27,15 +27,15 @@ use_mocks() {
   : > "$MOCK_LOG"
 }
 
-# A throwaway repo root whose config/, scripts/, src/ and fonts/ point back at
-# the real ones. link-config takes $DOTFILES_DIR as its root, so this lets a
+# A throwaway repo root whose config/, scripts/ and src/ point back at the real
+# ones. link-config takes $DOTFILES_DIR as its root, so this lets a
 # test add or omit a .env without touching the checkout the suite is running
 # from — which may well be someone's live dotfiles.
 fake_repo() {
   export DOTFILES_DIR="$BATS_TEST_TMPDIR/repo"
   mkdir -p "$DOTFILES_DIR"
   local dir
-  for dir in config scripts src fonts; do
+  for dir in config scripts src; do
     ln -sfn "$REPO_DIR/$dir" "$DOTFILES_DIR/$dir"
   done
 }

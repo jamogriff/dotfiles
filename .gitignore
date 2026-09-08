@@ -3,3 +3,5 @@
 # to it and must stay tracked.
 .env
 .idea/
+# Fonts are downloaded by src/install-fonts
+*.zip

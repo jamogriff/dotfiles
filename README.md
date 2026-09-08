@@ -50,9 +50,10 @@ src/
   install-zsh               # zsh + oh-my-zsh + ~/.zshrc block + chsh   (both)
   install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
   install-kitty             # Kitty terminal + .desktop entries         (desktop)
+  install-fonts             # IBM Plex Mono Nerd Font into ~/.fonts     (desktop)
   install-nvim              # Neovim AppImage                           (both)
   install-docker            # Docker Engine + Compose plugin            (both)
-  link-config               # symlinks under config/, scripts/, fonts/  (both)
+  link-config               # symlinks under config/, scripts/ and .env (both)
   lib/
     link.bash               # link_config / link_zsh_custom / link_bin  (sourced only)
     profile.bash            # resolve + validate DOTFILES_PROFILE       (sourced only)
@@ -67,9 +68,10 @@ machine's profile:
 | 2 | `install-zsh` | `install-zsh` |
 | 3 | `install-version-managers` | — |
 | 4 | `install-kitty` | — |
-| 5 | `install-nvim` | `install-nvim` |
-| 6 | `install-docker` | `install-docker` |
-| 7 | `link-config` | `link-config` |
+| 5 | `install-fonts` | — |
+| 6 | `install-nvim` | `install-nvim` |
+| 7 | `install-docker` | `install-docker` |
+| 8 | `link-config` | `link-config` |
 
 zsh comes before `link-config` so the `$ZSH_CUSTOM` symlinks have somewhere to go, and Docker
 comes after nvim so an unreachable Docker repo still leaves you an editor.
@@ -103,8 +105,11 @@ Which *names* each profile gets is the single `case` block at the top of `src/li
 Adding something to `config/` means adding it to at least one branch; `tests/link-config.bats`
 fails if an entry is in neither.
 
-`fonts/` (unzipped, not symlinked) and `scripts/` (`~/.local/bin/<name>`) deliberately stay
-outside `config/`.
+`scripts/` (`~/.local/bin/<name>`) deliberately stays outside `config/`. Fonts aren't in the repo
+at all: `src/install-fonts` downloads the pinned
+[nerd-fonts](https://github.com/ryanoasis/nerd-fonts) release into `~/.fonts` during
+`bootstrap` on desktop, so `config/kitty/kitty.conf` has a `BlexMono Nerd Font Mono` to match
+against.
 
 ### Re-linking config
 

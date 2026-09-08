@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stand-in for fc-cache: a test has no business rebuilding the real font cache.
+echo "fc-cache $*" >> "$MOCK_LOG"

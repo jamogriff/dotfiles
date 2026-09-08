@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Stand-in for unzip: the archive a test has is the empty stub the curl mock
+# planted, so there is nothing real to extract.
+echo "unzip $*" >> "$MOCK_LOG"
+
+# install-fonts stamps a version into the -d target and later reads faces back
+# out of it, so fake up the one file that has to be there.
+args=("$@")
+for i in "${!args[@]}"; do
+  if [ "${args[$i]}" = -d ]; then
+    dest="${args[$((i + 1))]}"
+    mkdir -p "$dest"
+    : > "$dest/BlexMonoNerdFontMono-Regular.ttf"
+  fi
+done
