@@ -34,6 +34,7 @@ arguments:
 ```
 src/
   install-packages          # apt: xclip tmux curl unzip fzf ripgrep    (desktop)
+  install-software          # apt: zathura zathura-pdf-poppler          (desktop)
   install-zsh               # zsh + oh-my-zsh (vendor defaults) + chsh   (both)
   install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
   install-kitty             # Kitty terminal + .desktop entries         (desktop)
@@ -54,13 +55,14 @@ machine's profile:
 | Order | desktop | tty |
 |---|---|---|
 | 1 | `install-packages` | — |
-| 2 | `install-zsh` | `install-zsh` |
-| 3 | `install-version-managers` | — |
-| 4 | `install-kitty` | — |
-| 5 | `install-fonts` | — |
-| 6 | `install-nvim` | `install-nvim` |
-| 7 | `install-docker` | `install-docker` |
-| 8 | `link-config` | `link-config` |
+| 2 | `install-software` | — |
+| 3 | `install-zsh` | `install-zsh` |
+| 4 | `install-version-managers` | — |
+| 5 | `install-kitty` | — |
+| 6 | `install-fonts` | — |
+| 7 | `install-nvim` | `install-nvim` |
+| 8 | `install-docker` | `install-docker` |
+| 9 | `link-config` | `link-config` |
 
 
 ### The `config/` directory
@@ -134,6 +136,9 @@ it on every shell start.
 `src/install-packages` apt-installs a small set of OS-level packages (tmux, fzf, ripgrep, etc.) on
 desktop. TTY goes without them: `install-nvim` apt-installs `curl` itself if it has to, and
 `live_grep` just isn't available there.
+
+`src/install-software` is the desktop-only counterpart for end-user applications (Zathura) rather
+than CLI substrate — a new application goes there, a new CLI tool goes in `install-packages`.
 
 `src/install-version-managers` is desktop-only and installs
 [nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby) and

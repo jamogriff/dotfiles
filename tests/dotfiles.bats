@@ -57,7 +57,7 @@ setup() {
   # grep -o to compare the sequence, not just membership: order is what stops
   # link-config running before install-zsh has created ~/.oh-my-zsh.
   [ "$(echo "$output" | grep -o '^fake .*' | sed 's/^fake //' | tr '\n' ' ')" \
-    = "install-packages install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config " ]
+    = "install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config " ]
   [[ "$output" == *"desktop bootstrap complete"* ]]
 }
 

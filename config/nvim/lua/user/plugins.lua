@@ -265,12 +265,6 @@ if not profile.is_tty() then
         require('user.plugins.gitsigns')
       end,
     },
-    {
-      'lervag/vimtex',
-      config = function()
-        require('user.plugins.vimtex')
-      end,
-    }, -- TODO: load on filetype (.tex?))
   })
 end
 

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# apt-installs end-user applications for the desktop profile. Run by bootstrap
+# on desktop only; tty has no GUI to put these in front of.
+# Safe to re-run: it is one apt-get install, so a second run just re-checks.
+#
+# Manual steps:
+#   1. sudo apt-get update
+#   2. sudo apt-get install -y zathura zathura-pdf-poppler
+set -euo pipefail
+
+# Applications live here; CLI substrate (xclip, fzf, ripgrep, tmux) belongs in
+# src/install-packages instead.
+PACKAGES=(zathura zathura-pdf-poppler)
+
+sudo apt-get update
+sudo apt-get install -y "${PACKAGES[@]}"

@@ -27,7 +27,7 @@ MSG
 bootstrap() {
   local steps
   case "$DOTFILES_PROFILE" in
-    desktop) steps=(install-packages install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config) ;;
+    desktop) steps=(install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config) ;;
     tty)     steps=(install-zsh install-nvim install-docker link-config) ;;
   esac
 
