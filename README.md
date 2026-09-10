@@ -44,6 +44,8 @@ src/
   lib/
     link.bash               # link_config / link_zsh_custom / link_bin  (sourced only)
     profile.bash            # resolve + validate DOTFILES_PROFILE       (sourced only)
+    versions.bash           # NVIM_VERSION, FONT_VERSION, KITTY_VERSION,
+                             # NODE_VERSION, PYTHON_VERSION, installer pins (sourced only)
 ```
 
 `./dotfiles <script-name>` runs one of them; `./dotfiles bootstrap` runs the sequence for this

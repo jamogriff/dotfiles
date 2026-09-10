@@ -12,7 +12,9 @@
 # Fetches: https://github.com/ryanoasis/nerd-fonts/releases/download/$FONT_VERSION/IBMPlexMono.zip
 set -euo pipefail
 
-FONT_VERSION=v3.4.0
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/versions.bash"
+
 FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/$FONT_VERSION/IBMPlexMono.zip"
 FONTS_DIR="$HOME/.fonts"
 # kitty is the only consumer and wants the Mono variant; the archive also

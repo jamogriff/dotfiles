@@ -15,7 +15,9 @@
 # Fetches: https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage
 set -euo pipefail
 
-NVIM_VERSION=v0.12.5
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/versions.bash"
+
 APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage"
 LOCAL_BIN="$HOME/.local/bin"
 NVIM_APPIMAGE="$LOCAL_BIN/nvim-linux-x86_64.appimage"

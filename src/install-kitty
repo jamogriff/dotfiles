@@ -2,10 +2,11 @@
 # Installs the Kitty terminal under ~/.local/kitty.app and registers its
 # desktop entries. Run by bootstrap on desktop only.
 # Safe to re-run: it tears the previous install down first, so a re-run is a
-# clean reinstall of whatever the vendor installer currently ships.
+# clean reinstall.
 #
 # Manual steps:
-#   1. curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
+#   1. curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin \
+#        installer=version-$KITTY_VERSION
 #   2. sudo ln -s ~/.local/kitty.app/bin/kitty /usr/local/bin/kitty
 #   3. cp ~/.local/kitty.app/share/applications/kitty*.desktop ~/.local/share/applications/
 #   4. In those two files, point Icon= and Exec= at ~/.local/kitty.app instead
@@ -14,11 +15,14 @@
 # Fetches: https://sw.kovidgoyal.net/kitty/installer.sh
 set -euo pipefail
 
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/versions.bash"
+
 sudo rm -f /usr/local/bin/kitty
 rm -rf "$HOME/.config/kitty"  # link-config puts the symlink back
 rm -rf "$HOME/.local/kitty.app"
 
-curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
+curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n installer="version-$KITTY_VERSION"
 
 sudo ln -s "$HOME/.local/kitty.app/bin/kitty" /usr/local/bin/kitty
 
