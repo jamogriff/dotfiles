@@ -1,3 +1,6 @@
+typeset -U path
+path=("$HOME/.local/bin" $path)
+
 # Good good color
 export TERM=xterm-256color
 
