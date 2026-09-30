@@ -53,7 +53,7 @@ path_without() {
   mkdir -p "$shimdir"
 
   local tool real
-  for tool in bash sh grep sed cat cp mv mkdir rm ln touch basename dirname printf cut chmod; do
+  for tool in bash sh grep sed cat cp mv mkdir rm ln touch basename dirname printf cut chmod gzip gunzip; do
     real="$(command -v "$tool")" || continue
     ln -sf "$real" "$shimdir/$tool"
   done

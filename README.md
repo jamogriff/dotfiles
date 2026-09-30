@@ -39,14 +39,14 @@ src/
   install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
   install-kitty             # Kitty terminal + .desktop entries         (desktop)
   install-fonts             # IBM Plex Mono Nerd Font into ~/.fonts     (desktop)
-  install-nvim              # Neovim AppImage                           (both)
+  install-nvim              # Neovim AppImage + tree-sitter CLI         (both)
   install-docker            # Docker Engine + Compose plugin            (both)
   link-config               # symlinks under config/, scripts/ and .env (both)
   lib/
     link.bash               # link_config / link_zsh_custom / link_bin  (sourced only)
     profile.bash            # resolve + validate DOTFILES_PROFILE       (sourced only)
-    versions.bash           # NVIM_VERSION, FONT_VERSION, KITTY_VERSION,
-                             # NODE_VERSION, PYTHON_VERSION, installer pins (sourced only)
+    versions.bash           # NVIM_VERSION, TREE_SITTER_VERSION, FONT_VERSION,
+                             # KITTY_VERSION, NODE_VERSION, PYTHON_VERSION, installer pins (sourced only)
 ```
 
 `./dotfiles <script-name>` runs one of them; `./dotfiles bootstrap` runs the sequence for this

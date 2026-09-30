@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
-# Exercises the real src/install-nvim with curl mocked out, so no AppImage is
-# ever downloaded. The mock leaves behind a stand-in that answers
-# --appimage-extract the way the real one does, which is all the script uses.
+# Exercises the real src/install-nvim with curl mocked out, so no AppImage or
+# tree-sitter binary is ever downloaded. The mock leaves behind stand-ins that
+# answer --appimage-extract / --version the way the real ones do, which is all
+# the script uses.
 
 load test_helper
 
@@ -51,4 +52,35 @@ setup() {
   run bash "$REPO_DIR/src/install-nvim"
   [ "$status" -eq 0 ]
   [ "$HOME/.local/bin/nvim" -ef "$HOME/.local/nvim-app/AppRun" ]
+}
+
+@test "installs the tree-sitter CLI into ~/.local/bin" {
+  run bash "$REPO_DIR/src/install-nvim"
+  [ "$status" -eq 0 ]
+
+  grep -q "tree-sitter-linux-x64.gz" "$MOCK_LOG"
+  [ -x "$HOME/.local/bin/tree-sitter" ]
+  [[ "$("$HOME/.local/bin/tree-sitter" --version)" == "tree-sitter 0.27.0" ]]
+}
+
+@test "installs tree-sitter even when the pinned Neovim is already there" {
+  bash "$REPO_DIR/src/install-nvim"
+  rm "$HOME/.local/bin/tree-sitter"
+  : > "$MOCK_LOG"
+
+  run bash "$REPO_DIR/src/install-nvim"
+  [ "$status" -eq 0 ]
+  grep -q "tree-sitter-linux-x64.gz" "$MOCK_LOG"
+  ! grep -q "appimage" "$MOCK_LOG"
+  [ -x "$HOME/.local/bin/tree-sitter" ]
+}
+
+@test "replaces a tree-sitter of a different version" {
+  mkdir -p "$HOME/.local/bin"
+  printf '#!/usr/bin/env bash\necho "tree-sitter 0.22.6"\n' > "$HOME/.local/bin/tree-sitter"
+  chmod +x "$HOME/.local/bin/tree-sitter"
+
+  run bash "$REPO_DIR/src/install-nvim"
+  [ "$status" -eq 0 ]
+  [[ "$("$HOME/.local/bin/tree-sitter" --version)" == "tree-sitter 0.27.0" ]]
 }

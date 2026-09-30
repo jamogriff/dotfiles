@@ -11,6 +11,10 @@
 # Neovim AppImage — https://github.com/neovim/neovim/releases
 NVIM_VERSION=v0.12.5
 
+# tree-sitter CLI, used by nvim-treesitter to build parsers (needs >= 0.26.1)
+# — https://github.com/tree-sitter/tree-sitter/releases
+TREE_SITTER_VERSION=v0.27.0
+
 # IBM Plex Mono Nerd Font — https://github.com/ryanoasis/nerd-fonts/releases
 FONT_VERSION=v3.4.0
 

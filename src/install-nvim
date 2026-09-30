@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Installs Neovim from the upstream AppImage, extracted under ~/.local/nvim-app
-# and symlinked to ~/.local/bin/nvim. Run by bootstrap on desktop and tty.
-# Safe to re-run: skips everything if ~/.local/bin/nvim already reports
-# $NVIM_VERSION.
+# and symlinked to ~/.local/bin/nvim, plus the tree-sitter CLI that
+# nvim-treesitter needs to build parsers. Run by bootstrap on desktop and tty.
+# Safe to re-run: each one is skipped if ~/.local/bin already has its pinned
+# version ($NVIM_VERSION / $TREE_SITTER_VERSION).
 #
 # Manual steps:
 #   1. sudo apt-get install -y curl
@@ -11,8 +12,11 @@
 #   4. ./nvim-linux-x86_64.appimage --appimage-extract   # avoids needing FUSE
 #   5. mv squashfs-root ~/.local/nvim-app && ln -s ~/.local/nvim-app/AppRun ~/.local/bin/nvim
 #   6. nvim --version
+#   7. curl -fsSL <TREE_SITTER_URL> | gunzip > ~/.local/bin/tree-sitter
+#   8. chmod u+x ~/.local/bin/tree-sitter && tree-sitter --version
 #
 # Fetches: https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage
+#          https://github.com/tree-sitter/tree-sitter/releases/download/$TREE_SITTER_VERSION/tree-sitter-linux-x64.gz
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -23,8 +27,21 @@ LOCAL_BIN="$HOME/.local/bin"
 NVIM_APPIMAGE="$LOCAL_BIN/nvim-linux-x86_64.appimage"
 NVIM_EXTRACTED="$HOME/.local/nvim-app"
 
-if [ -x "$LOCAL_BIN/nvim" ] && [[ "$("$LOCAL_BIN/nvim" --version)" == *"NVIM $NVIM_VERSION"* ]]; then
-  echo "Neovim $NVIM_VERSION already installed, skipping."
+TREE_SITTER_URL="https://github.com/tree-sitter/tree-sitter/releases/download/$TREE_SITTER_VERSION/tree-sitter-linux-x64.gz"
+TREE_SITTER_BIN="$LOCAL_BIN/tree-sitter"
+
+nvim_installed() {
+  [ -x "$LOCAL_BIN/nvim" ] && [[ "$("$LOCAL_BIN/nvim" --version)" == *"NVIM $NVIM_VERSION"* ]]
+}
+
+# `tree-sitter --version` prints e.g. "tree-sitter 0.27.0"; the pin carries a
+# leading v.
+tree_sitter_installed() {
+  [ -x "$TREE_SITTER_BIN" ] && [[ "$("$TREE_SITTER_BIN" --version)" == "tree-sitter ${TREE_SITTER_VERSION#v}"* ]]
+}
+
+if nvim_installed && tree_sitter_installed; then
+  echo "Neovim $NVIM_VERSION and tree-sitter $TREE_SITTER_VERSION already installed, skipping."
   exit 0
 fi
 
@@ -35,17 +52,33 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 mkdir -p "$LOCAL_BIN"
-rm -f "$LOCAL_BIN/nvim"
-rm -rf "$NVIM_EXTRACTED"
 
-cd "$LOCAL_BIN"
-curl -LO "$APPIMAGE_URL"
-chmod u+x "$NVIM_APPIMAGE"
+if nvim_installed; then
+  echo "Neovim $NVIM_VERSION already installed, skipping."
+else
+  rm -f "$LOCAL_BIN/nvim"
+  rm -rf "$NVIM_EXTRACTED"
 
-# Extracted rather than run in place: the AppImage needs FUSE, which a bare
-# server install often doesn't have.
-"$NVIM_APPIMAGE" --appimage-extract
-mv squashfs-root "$NVIM_EXTRACTED"
-ln -s "$NVIM_EXTRACTED/AppRun" "$LOCAL_BIN/nvim"
+  cd "$LOCAL_BIN"
+  curl -LO "$APPIMAGE_URL"
+  chmod u+x "$NVIM_APPIMAGE"
 
-echo "✅ Neovim installed and symlinked to 'nvim'."
+  # Extracted rather than run in place: the AppImage needs FUSE, which a bare
+  # server install often doesn't have.
+  "$NVIM_APPIMAGE" --appimage-extract
+  mv squashfs-root "$NVIM_EXTRACTED"
+  ln -s "$NVIM_EXTRACTED/AppRun" "$LOCAL_BIN/nvim"
+
+  echo "✅ Neovim installed and symlinked to 'nvim'."
+fi
+
+# nvim-treesitter (main) shells out to this to build parsers. Upstream warns
+# against the npm package, and apt's is too old, so it's the release binary.
+if tree_sitter_installed; then
+  echo "tree-sitter $TREE_SITTER_VERSION already installed, skipping."
+else
+  curl -fsSL "$TREE_SITTER_URL" | gunzip > "$TREE_SITTER_BIN"
+  chmod u+x "$TREE_SITTER_BIN"
+
+  echo "✅ tree-sitter CLI installed to '$TREE_SITTER_BIN'."
+fi

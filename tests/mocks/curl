@@ -20,6 +20,12 @@ for i in "${!args[@]}"; do
       cat "$MOCKS_DIR/../fixtures/oh-my-zsh/install.sh"
       exit 0
       ;;
+    # `curl -fsSL <url> | gunzip` — install-nvim's tree-sitter CLI. Emits a
+    # gzipped stand-in that answers --version like the real binary.
+    *tree-sitter-linux-x64.gz)
+      printf '#!/usr/bin/env bash\necho "tree-sitter 0.27.0"\n' | gzip
+      exit 0
+      ;;
     # `curl ... -o <path>` — install-docker's GPG key fetch.
     -o)
       : > "${args[$((i + 1))]}"

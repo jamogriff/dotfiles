@@ -77,11 +77,13 @@ local plugins = {
   'tpope/vim-sleuth',
   {
     'nvim-treesitter/nvim-treesitter',
-    branch = 'master',
+    -- `master` is frozen and breaks on Neovim 0.12 (its query directives
+    -- expect a single node per capture, 0.12 hands them a list).
+    branch = 'main',
+    lazy = false, -- main doesn't support lazy-loading
     build = ':TSUpdate',
     dependencies = {
-      { 'nvim-treesitter/playground', branch = 'master' },
-      { 'nvim-treesitter/nvim-treesitter-textobjects', branch = 'master' },
+      { 'nvim-treesitter/nvim-treesitter-textobjects', branch = 'main' },
       'JoosepAlviste/nvim-ts-context-commentstring',
     },
     config = function()
