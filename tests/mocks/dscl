@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# macOS's answer to getent, for install-zsh. Same strategy as the getent mock:
+# report the shell the script wants (/bin/zsh) so the "already the default,
+# skipping" branch fires and chsh is never reached.
+echo "UserShell: /bin/zsh"

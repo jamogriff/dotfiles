@@ -99,3 +99,36 @@ expected_repo_line() {
   ! grep -q "systemctl" "$MOCK_LOG"
   [[ "$output" == *"sudo systemctl enable --now docker"* ]]
 }
+
+@test "macos brew-installs colima and the docker CLI with its plugins, no apt or groups" {
+  rm -f "$ETC_DIR/os-release"
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-docker"
+  [ "$status" -eq 0 ]
+  grep -q "brew install colima docker docker-compose docker-buildx jq" "$MOCK_LOG"
+  ! grep -q "apt-get" "$MOCK_LOG"
+  ! grep -q "sudo" "$MOCK_LOG"
+  ! grep -q "usermod" "$MOCK_LOG"
+  ! grep -q "curl" "$MOCK_LOG"
+  [[ "$output" == *"colima start"* ]]
+  [[ "$output" != *"systemctl"* ]]
+}
+
+@test "macos points docker at brew's plugin dir without clobbering config.json" {
+  mkdir -p "$HOME/.docker"
+  echo '{"credsStore":"osxkeychain","cliPluginsExtraDirs":["/else"]}' > "$HOME/.docker/config.json"
+
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-docker"
+  [ "$status" -eq 0 ]
+  [ "$(jq -r .credsStore "$HOME/.docker/config.json")" = osxkeychain ]
+  [ "$(jq -c .cliPluginsExtraDirs "$HOME/.docker/config.json")" = '["/else","/opt/homebrew/lib/docker/cli-plugins"]' ]
+}
+
+@test "macos creates config.json when absent, and leaves it alone on a second run" {
+  DOTFILES_OS=macos bash "$REPO_DIR/src/install-docker"
+  [ "$(jq -c .cliPluginsExtraDirs "$HOME/.docker/config.json")" = '["/opt/homebrew/lib/docker/cli-plugins"]' ]
+
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-docker"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"already lists /opt/homebrew/lib/docker/cli-plugins, skipping."* ]]
+  [ "$(jq -c .cliPluginsExtraDirs "$HOME/.docker/config.json")" = '["/opt/homebrew/lib/docker/cli-plugins"]' ]
+}

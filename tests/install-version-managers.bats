@@ -69,3 +69,16 @@ setup() {
   # ...and says so, with the command to run.
   [[ "$output" == *"rbenv install 3.4.1 && rbenv global 3.4.1"* ]]
 }
+
+@test "macos brew-installs the Ruby build deps and runs the same vendor installers" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-version-managers"
+  [ "$status" -eq 0 ]
+  grep -q "brew install openssl@3 readline libyaml gmp autoconf rust" "$MOCK_LOG"
+  ! grep -q "apt-get" "$MOCK_LOG"
+  ! grep -q "sudo" "$MOCK_LOG"
+  grep -q "nvm-sh/nvm" "$MOCK_LOG"
+  grep -q "rbenv.org/install.sh" "$MOCK_LOG"
+  grep -q "astral.sh/uv" "$MOCK_LOG"
+  grep -q "nvm install 24" "$MOCK_LOG"
+  grep -q "uv python install 3.14 --default" "$MOCK_LOG"
+}

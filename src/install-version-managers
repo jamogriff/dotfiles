@@ -9,6 +9,7 @@
 #   1. sudo apt-get install -y autoconf patch build-essential rustc libssl-dev \
 #        zlib1g-dev libyaml-dev libreadline-dev libncurses-dev libffi-dev \
 #        libgdbm-dev libdb-dev uuid-dev
+#      (macOS: brew install openssl@3 readline libyaml gmp autoconf rust)
 #   2. curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
 #   3. curl -fsSL https://rbenv.org/install.sh | bash
 #   4. curl -LsSf https://astral.sh/uv/0.12.9/install.sh | sh
@@ -23,23 +24,34 @@ set -eo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$DOTFILES_DIR/src/lib/versions.bash"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
 
 # ruby-build compiles Ruby from source, so rbenv needs a C toolchain plus the
 # headers Ruby links against — miss one and `rbenv install` dies partway through
-# a compile with an error that doesn't point back at the missing package. Names
-# are Ubuntu/Debian's (this targets Pop!_OS 24.04). `rustc` is what lets Ruby
-# 3.2+ build YJIT.
-RUBY_BUILD_DEPS=(
-  autoconf patch build-essential rustc libssl-dev zlib1g-dev libyaml-dev
-  libreadline-dev libncurses-dev libffi-dev libgdbm-dev libdb-dev uuid-dev
-)
+# a compile with an error that doesn't point back at the missing package. Linux
+# names are Ubuntu/Debian's (this targets Pop!_OS 24.04); on macOS the compiler
+# is the Xcode Command Line Tools that install-homebrew pulled in. `rustc`/`rust`
+# is what lets Ruby 3.2+ build YJIT.
+case "$DOTFILES_OS" in
+  debian)
+    RUBY_BUILD_DEPS=(
+      autoconf patch build-essential rustc libssl-dev zlib1g-dev libyaml-dev
+      libreadline-dev libncurses-dev libffi-dev libgdbm-dev libdb-dev uuid-dev
+    )
+    ;;
+  macos)
+    RUBY_BUILD_DEPS=(openssl@3 readline libyaml gmp autoconf rust)
+    ;;
+esac
 
-sudo apt-get update
-sudo apt-get install -y "${RUBY_BUILD_DEPS[@]}"
+pkg_install "${RUBY_BUILD_DEPS[@]}"
 
 # Each installer is self-idempotent and wires itself into the rc file it detects
 # — always ~/.bashrc, since this script runs under bash. zsh gets the same wiring
-# from config/zsh/version-managers.zsh.
+# from config/zsh/version-managers.zsh. The same vendor installers run on both
+# OSes so the paths below (~/.nvm, ~/.rbenv, ~/.local/bin/uv) are identical.
 
 # nvm (Node) — https://github.com/nvm-sh/nvm
 curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_INSTALLER_VERSION/install.sh" | bash

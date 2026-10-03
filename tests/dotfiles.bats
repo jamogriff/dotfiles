@@ -79,3 +79,25 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"tty bootstrap complete"* ]]
 }
+
+@test "bootstrap on macos installs homebrew first, then the desktop steps" {
+  DOTFILES_OS=macos DOTFILES_PROFILE=desktop run "$DISPATCHER" bootstrap
+  [ "$status" -eq 0 ]
+
+  [ "$(echo "$output" | grep -o '^fake .*' | sed 's/^fake //' | tr '\n' ' ')" \
+    = "install-homebrew install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config " ]
+  [[ "$output" == *"macos desktop bootstrap complete"* ]]
+}
+
+@test "bootstrap on macos rejects the tty profile before running anything" {
+  DOTFILES_OS=macos DOTFILES_PROFILE=tty run "$DISPATCHER" bootstrap
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"isn't supported on macOS"* ]]
+  [[ "$output" != *"fake"* ]]
+}
+
+@test "bootstrap on debian never runs install-homebrew" {
+  DOTFILES_PROFILE=desktop run "$DISPATCHER" bootstrap
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"fake install-homebrew"* ]]
+}

@@ -16,3 +16,10 @@ setup() {
     grep -qw "$pkg" "$MOCK_LOG"
   done
 }
+
+@test "macos installs nothing and says so" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-software"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Preview"* ]]
+  [ ! -s "$MOCK_LOG" ]
+}

@@ -26,8 +26,8 @@ vim.keymap.set('i', ',,', '<Esc>A,')
 -- Shortcut to disable search highlighting
 vim.keymap.set('n', '<Leader>k', ':nohlsearch<CR>')
 
--- Open current file in default OS program
-vim.keymap.set('n', '<Leader>o', ':!xdg-open %<CR><CR>')
+-- Open current file in default OS program (xdg-open on Linux, open on macOS)
+vim.keymap.set('n', '<Leader>o', function() vim.ui.open(vim.fn.expand('%:p')) end)
 
 -- Handy switch lines with each other
 vim.keymap.set('i', '<A-j>', '<Esc>:move .+1<CR>==gi')

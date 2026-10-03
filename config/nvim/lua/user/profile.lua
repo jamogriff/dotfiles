@@ -1,5 +1,5 @@
 -- Which install profile this machine was set up with: 'desktop' (full plugin
--- set) or 'tty' (lighter set for a bare Linux console). Comes from
+-- set) or 'tty' (lighter set for a headless Linux server). Comes from
 -- DOTFILES_PROFILE, which ~/.zshrc exports by sourcing ~/.env.
 --
 -- Anything but 'tty' means desktop, so a GUI-launched nvim that inherited no

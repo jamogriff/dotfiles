@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-# Installs Docker Engine and the Compose plugin from Docker's own apt
-# repository. Run by bootstrap on desktop and tty.
-# Safe to re-run: the keyring, the sources list and the docker group membership
-# are each guarded on their own state, so a second run only re-checks apt.
+# Installs Docker: on Linux, Docker Engine and the Compose plugin from
+# Docker's own apt repository; on macOS, the docker CLI with the compose and
+# buildx plugins from brew, and colima as the daemon. Run by bootstrap on
+# desktop and tty.
+# Safe to re-run: the keyring, the sources list, the docker group membership
+# and the macOS plugin config are each guarded on their own state, so a second
+# run only re-checks the package manager.
 #
-# It deliberately does not enable or start the service — that's a per-machine
-# decision. Afterwards: `sudo systemctl enable --now docker`, then log out and
-# back in for the group change.
+# It deliberately does not enable or start the daemon — that's a per-machine
+# decision. Afterwards on Linux: `sudo systemctl enable --now docker`, then log
+# out and back in for the group change. On macOS: `colima start`.
 #
-# Manual steps:
+# Manual steps (Linux):
 #   1. sudo apt-get install -y ca-certificates curl
 #   2. sudo install -m 0755 -d /etc/apt/keyrings && sudo curl -fsSL \
 #        https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -19,8 +22,48 @@
 #        containerd.io docker-buildx-plugin docker-compose-plugin
 #   5. sudo usermod -aG docker "$USER"
 #
+# Manual steps (macOS):
+#   1. brew install colima docker docker-compose docker-buildx jq
+#   2. Add "$(brew --prefix)/lib/docker/cli-plugins" to cliPluginsExtraDirs
+#      in ~/.docker/config.json, so docker finds compose and buildx.
+#
 # Fetches: https://download.docker.com/linux/ubuntu/gpg
 set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" = macos ]; then
+  # colima rather than Docker Desktop: CLI-only and free of licensing. jq is
+  # for the config.json merge below.
+  pkg_install colima docker docker-compose docker-buildx jq
+
+  # brew's compose and buildx are docker CLI plugins, but docker only looks in
+  # its own plugin dirs unless config.json points it at brew's.
+  DOCKER_CONFIG_FILE="$HOME/.docker/config.json"
+  PLUGINS_DIR="$(brew --prefix)/lib/docker/cli-plugins"
+  mkdir -p "$(dirname "$DOCKER_CONFIG_FILE")"
+  [ -f "$DOCKER_CONFIG_FILE" ] || echo '{}' > "$DOCKER_CONFIG_FILE"
+
+  if jq -e --arg dir "$PLUGINS_DIR" '(.cliPluginsExtraDirs // []) | index($dir) != null' "$DOCKER_CONFIG_FILE" >/dev/null; then
+    echo "$DOCKER_CONFIG_FILE already lists $PLUGINS_DIR, skipping."
+  else
+    # Merged with jq rather than written whole: config.json also holds
+    # credential helpers and auths this must not clobber.
+    merged="$(jq --arg dir "$PLUGINS_DIR" '.cliPluginsExtraDirs = (.cliPluginsExtraDirs // []) + [$dir]' "$DOCKER_CONFIG_FILE")"
+    echo "$merged" > "$DOCKER_CONFIG_FILE"
+    echo "Added $PLUGINS_DIR to cliPluginsExtraDirs in $DOCKER_CONFIG_FILE."
+  fi
+
+  cat <<'MSG'
+
+Docker is installed but no daemon is running: colima provides one.
+  colima start
+Or, to start it at login: brew services start colima
+MSG
+  exit 0
+fi
 
 # Rooted at $ETC_DIR so the test suite can point the lot at a scratch tree.
 ETC_DIR="${ETC_DIR:-/etc}"

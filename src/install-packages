@@ -1,16 +1,27 @@
 #!/usr/bin/env bash
-# apt-installs the OS-level packages the desktop profile expects on $PATH.
-# Run by bootstrap on desktop only; tty deliberately goes without them.
-# Safe to re-run: it is one apt-get install, so a second run just re-checks.
+# Installs the OS-level packages the desktop profile expects on $PATH: apt on
+# Linux, brew on macOS. Run by bootstrap on desktop only; tty deliberately
+# goes without them.
+# Safe to re-run: it is one package-manager install, so a second run just
+# re-checks.
 #
 # Manual steps:
 #   1. sudo apt-get update
 #   2. sudo apt-get install -y xclip tmux curl unzip fzf ripgrep
+#   (macOS: brew install tmux fzf ripgrep)
 set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
 
 # zsh has its own step (src/install-zsh) since installing it is only half the
 # job; the language toolchains live in src/install-version-managers.
-PACKAGES=(xclip tmux curl unzip fzf ripgrep)
+case "$DOTFILES_OS" in
+  debian) PACKAGES=(xclip tmux curl unzip fzf ripgrep) ;;
+  # No xclip: pbcopy is built in. curl and unzip ship with macOS.
+  macos)  PACKAGES=(tmux fzf ripgrep) ;;
+esac
 
-sudo apt-get update
-sudo apt-get install -y "${PACKAGES[@]}"
+pkg_install "${PACKAGES[@]}"

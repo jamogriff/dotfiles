@@ -7,6 +7,10 @@
 # Single source of truth for pinned upstream versions. Bumping a pin here
 # only changes what the next bootstrap (or standalone re-run of the one
 # affected script) installs — it doesn't touch an already-provisioned box.
+#
+# Linux only: macOS installs these through brew, which ships whatever is
+# current. The two installer pins and NODE_VERSION/PYTHON_VERSION apply to
+# both OSes.
 
 # Neovim AppImage — https://github.com/neovim/neovim/releases
 NVIM_VERSION=v0.12.5

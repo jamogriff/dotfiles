@@ -23,3 +23,12 @@ setup() {
   ! grep -qw "zsh" "$MOCK_LOG"
   ! grep -qw "build-essential" "$MOCK_LOG"
 }
+
+@test "macos brew-installs the list without xclip, curl or unzip" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-packages"
+  [ "$status" -eq 0 ]
+  grep -q "brew install tmux fzf ripgrep" "$MOCK_LOG"
+  ! grep -q "apt-get" "$MOCK_LOG"
+  ! grep -q "sudo" "$MOCK_LOG"
+  ! grep -qw "xclip" "$MOCK_LOG"
+}

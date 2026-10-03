@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Installs the Kitty terminal under ~/.local/kitty.app and registers its
-# desktop entries. Run by bootstrap on desktop only.
-# Safe to re-run: it tears the previous install down first, so a re-run is a
-# clean reinstall.
+# Installs the Kitty terminal: on Linux under ~/.local/kitty.app with its
+# desktop entries registered, on macOS as the brew cask. Run by bootstrap on
+# desktop only.
+# Safe to re-run: on Linux it tears the previous install down first, so a
+# re-run is a clean reinstall; on macOS it skips if the cask is present.
 #
-# Manual steps:
+# Manual steps (Linux; macOS is `brew install --cask kitty`):
 #   1. curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin \
 #        installer=version-$KITTY_VERSION
 #   2. sudo ln -s ~/.local/kitty.app/bin/kitty /usr/local/bin/kitty
@@ -17,6 +18,20 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$DOTFILES_DIR/src/lib/versions.bash"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" = macos ]; then
+  ensure_brew_on_path
+  if brew list --cask kitty >/dev/null 2>&1; then
+    echo "kitty already installed by brew, skipping."
+  else
+    brew install --cask kitty
+  fi
+  # Everything below is Linux-only: the symlink, the .desktop files and the
+  # wipe of ~/.config/kitty that link-config puts back.
+  exit 0
+fi
 
 sudo rm -f /usr/local/bin/kitty
 rm -rf "$HOME/.config/kitty"  # link-config puts the symlink back

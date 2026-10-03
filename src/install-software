@@ -8,9 +8,17 @@
 #   2. sudo apt-get install -y zathura zathura-pdf-poppler
 set -euo pipefail
 
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" = macos ]; then
+  echo "No PDF viewer is installed on macOS; Preview covers it. Skipping."
+  exit 0
+fi
+
 # Applications live here; CLI substrate (xclip, fzf, ripgrep, tmux) belongs in
 # src/install-packages instead.
 PACKAGES=(zathura zathura-pdf-poppler)
 
-sudo apt-get update
-sudo apt-get install -y "${PACKAGES[@]}"
+pkg_install "${PACKAGES[@]}"

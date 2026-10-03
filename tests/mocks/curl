@@ -20,6 +20,17 @@ for i in "${!args[@]}"; do
       cat "$MOCKS_DIR/../fixtures/oh-my-zsh/install.sh"
       exit 0
       ;;
+    # `curl -fsSL <url>` captured into a variable and handed to `bash -c` by
+    # install-homebrew, which then checks that brew exists -- so the stand-in
+    # installer's one job is to plant it where find_brew looks.
+    *Homebrew/install*install.sh)
+      cat <<'INSTALLER'
+mkdir -p "$BREW_ROOT/opt/homebrew/bin"
+printf '#!/usr/bin/env bash\n' > "$BREW_ROOT/opt/homebrew/bin/brew"
+chmod +x "$BREW_ROOT/opt/homebrew/bin/brew"
+INSTALLER
+      exit 0
+      ;;
     # `curl -fsSL <url> | gunzip` — install-nvim's tree-sitter CLI. Emits a
     # gzipped stand-in that answers --version like the real binary.
     *tree-sitter-linux-x64.gz)

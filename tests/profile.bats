@@ -57,3 +57,15 @@ resolve() {
   [ "$status" -ne 0 ]
   [[ "$output" == *"DOTFILES_PROFILE is 'laptop'"* ]]
 }
+
+@test "rejects tty on macos, since a Mac is always a desktop" {
+  run resolve DOTFILES_OS=macos DOTFILES_PROFILE=tty
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"isn't supported on macOS"* ]]
+}
+
+@test "accepts desktop on macos" {
+  run resolve DOTFILES_OS=macos DOTFILES_PROFILE=desktop
+  [ "$status" -eq 0 ]
+  [ "$output" = "desktop" ]
+}

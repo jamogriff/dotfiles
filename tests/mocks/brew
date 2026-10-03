@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Stand-in for brew: nothing here ever installs anything.
+echo "brew $*" >> "$MOCK_LOG"
+
+case "$*" in
+  --prefix)
+    echo /opt/homebrew
+    ;;
+  "install --cask "*)
+    touch "$MOCK_BREW_CASKS/$3"
+    # The font cask's one side effect install-fonts looks for afterwards.
+    if [ "$3" = font-blex-mono-nerd-font ]; then
+      mkdir -p "$HOME/Library/Fonts"
+      : > "$HOME/Library/Fonts/BlexMonoNerdFontMono-Regular.ttf"
+    fi
+    ;;
+  "list --cask "*)
+    [ -e "$MOCK_BREW_CASKS/$3" ]
+    ;;
+esac

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Installs the IBM Plex Mono Nerd Font into ~/.fonts from the upstream
-# nerd-fonts release. Run by bootstrap on desktop only.
-# Safe to re-run: skips everything if ~/.fonts already reports $FONT_VERSION.
+# Installs the IBM Plex Mono Nerd Font: on Linux into ~/.fonts from the
+# upstream nerd-fonts release, on macOS as the brew cask. Run by bootstrap on
+# desktop only.
+# Safe to re-run: skips everything if ~/.fonts already reports $FONT_VERSION
+# (Linux) or the cask is already installed (macOS).
 #
-# Manual steps:
+# Manual steps (Linux; macOS is `brew install --cask font-blex-mono-nerd-font`):
 #   1. curl -L -o /tmp/IBMPlexMono.zip <FONT_URL>
 #   2. rm -rf ~/.fonts
 #   3. unzip /tmp/IBMPlexMono.zip 'BlexMonoNerdFontMono-*.ttf' -d ~/.fonts
@@ -14,6 +16,28 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$DOTFILES_DIR/src/lib/versions.bash"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" = macos ]; then
+  ensure_brew_on_path
+  CASK=font-blex-mono-nerd-font
+  if brew list --cask "$CASK" >/dev/null 2>&1; then
+    echo "$CASK already installed, skipping."
+  else
+    brew install --cask "$CASK"
+  fi
+
+  # The cask owns ~/Library/Fonts; this only looks, and never runs the rm -rf
+  # below. The file names carry the family kitty.conf asks for, "BlexMono Nerd
+  # Font Mono", so their presence is what says the font is usable.
+  if ls "$HOME"/Library/Fonts/BlexMonoNerdFontMono-*.ttf >/dev/null 2>&1; then
+    echo "✅ IBM Plex Mono Nerd Font installed to ~/Library/Fonts."
+  else
+    echo "warning: no BlexMonoNerdFontMono-*.ttf in ~/Library/Fonts; kitty.conf's 'BlexMono Nerd Font Mono' won't resolve. Check 'brew list --cask $CASK'." >&2
+  fi
+  exit 0
+fi
 
 FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/$FONT_VERSION/IBMPlexMono.zip"
 FONTS_DIR="$HOME/.fonts"

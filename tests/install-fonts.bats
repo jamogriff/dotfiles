@@ -51,3 +51,33 @@ setup() {
   [ "$status" -eq 0 ]
   grep -qF "IBMPlexMono.zip" "$MOCK_LOG"
 }
+
+@test "macos installs the font cask and never downloads or wipes a font dir" {
+  mkdir -p "$HOME/.fonts" "$HOME/Library/Fonts"
+  touch "$HOME/.fonts/keep.ttf" "$HOME/Library/Fonts/Other.ttf"
+
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-fonts"
+  [ "$status" -eq 0 ]
+  grep -q "brew install --cask font-blex-mono-nerd-font" "$MOCK_LOG"
+  ! grep -q "curl" "$MOCK_LOG"
+  ! grep -q "unzip" "$MOCK_LOG"
+  ! grep -q "fc-cache" "$MOCK_LOG"
+  [ -f "$HOME/.fonts/keep.ttf" ]
+  [ -f "$HOME/Library/Fonts/Other.ttf" ]
+  [[ "$output" == *"installed to ~/Library/Fonts"* ]]
+}
+
+@test "macos skips the cask when brew already has it" {
+  touch "$MOCK_BREW_CASKS/font-blex-mono-nerd-font"
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-fonts"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"already installed, skipping."* ]]
+  ! grep -q "brew install" "$MOCK_LOG"
+}
+
+@test "macos warns when the cask left no BlexMono faces behind" {
+  touch "$MOCK_BREW_CASKS/font-blex-mono-nerd-font"
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-fonts"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"warning: no BlexMonoNerdFontMono-*.ttf"* ]]
+}

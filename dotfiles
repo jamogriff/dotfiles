@@ -8,6 +8,7 @@ set -euo pipefail
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 export DOTFILES_DIR
 
+source "$DOTFILES_DIR/src/lib/platform.bash"
 source "$DOTFILES_DIR/src/lib/profile.bash"
 
 usage() {
@@ -19,16 +20,19 @@ Usage: dotfiles <command>
   help               show this message
 
 Profile is read from DOTFILES_PROFILE, or from .env in the repo root.
+The OS is detected from uname: Linux installs with apt, macOS with Homebrew.
 MSG
 }
 
 # Ordering: zsh before link-config so link_zsh_custom finds ~/.oh-my-zsh, and
 # docker after nvim so an unreachable Docker repo still leaves you an editor.
+# On macOS, homebrew first since every other step installs through it.
 bootstrap() {
   local steps
-  case "$DOTFILES_PROFILE" in
-    desktop) steps=(install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config) ;;
-    tty)     steps=(install-zsh install-nvim install-docker link-config) ;;
+  case "$DOTFILES_OS/$DOTFILES_PROFILE" in
+    debian/desktop) steps=(install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config) ;;
+    debian/tty)     steps=(install-zsh install-nvim install-docker link-config) ;;
+    macos/desktop)  steps=(install-homebrew install-packages install-software install-zsh install-version-managers install-kitty install-fonts install-nvim install-docker link-config) ;;
   esac
 
   local step
@@ -37,7 +41,7 @@ bootstrap() {
     bash "$DOTFILES_DIR/src/$step"
   done
 
-  echo "==> $DOTFILES_PROFILE bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
+  echo "==> $DOTFILES_OS $DOTFILES_PROFILE bootstrap complete. Launch nvim to bootstrap plugins/LSPs."
 }
 
 cmd="${1:-help}"

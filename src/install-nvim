@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Installs Neovim from the upstream AppImage, extracted under ~/.local/nvim-app
-# and symlinked to ~/.local/bin/nvim, plus the tree-sitter CLI that
-# nvim-treesitter needs to build parsers. Run by bootstrap on desktop and tty.
-# Safe to re-run: each one is skipped if ~/.local/bin already has its pinned
-# version ($NVIM_VERSION / $TREE_SITTER_VERSION).
+# Installs Neovim plus the tree-sitter CLI that nvim-treesitter needs to build
+# parsers. On Linux that's the upstream AppImage, extracted under
+# ~/.local/nvim-app and symlinked to ~/.local/bin/nvim, and the CLI's release
+# binary; on macOS both come from brew. Run by bootstrap on desktop and tty.
+# Safe to re-run: on Linux each one is skipped if ~/.local/bin already has its
+# pinned version ($NVIM_VERSION / $TREE_SITTER_VERSION); on macOS brew does
+# its own check.
 #
-# Manual steps:
+# Manual steps (Linux; macOS is `brew install neovim tree-sitter-cli`):
 #   1. sudo apt-get install -y curl
 #   2. cd ~/.local/bin && curl -LO <APPIMAGE_URL>
 #   3. chmod u+x nvim-linux-x86_64.appimage
@@ -21,6 +23,14 @@ set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$DOTFILES_DIR/src/lib/versions.bash"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" = macos ]; then
+  # Whatever brew currently ships; the pins in versions.bash are Linux-only.
+  pkg_install neovim tree-sitter-cli
+  exit 0
+fi
 
 APPIMAGE_URL="https://github.com/neovim/neovim/releases/download/$NVIM_VERSION/nvim-linux-x86_64.appimage"
 LOCAL_BIN="$HOME/.local/bin"

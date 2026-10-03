@@ -7,15 +7,28 @@
 
 set -euo pipefail
 
-if ! command -v zsh >/dev/null 2>&1; then
-  sudo apt-get update
-  sudo apt-get install -y zsh
-fi
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/platform.bash"
 
-ZSH_BIN="$(command -v zsh)" || {
-  echo "zsh isn't on PATH even after attempting to install it; something above failed silently. Check the apt-get output." >&2
-  exit 1
-}
+resolve_os
+
+case "$DOTFILES_OS" in
+  debian)
+    if ! command -v zsh >/dev/null 2>&1; then
+      pkg_install zsh
+    fi
+
+    ZSH_BIN="$(command -v zsh)" || {
+      echo "zsh isn't on PATH even after attempting to install it; something above failed silently. Check the apt-get output." >&2
+      exit 1
+    }
+    ;;
+  macos)
+    # zsh ships with macOS. /bin/zsh is the one /etc/shells lists; brew's isn't,
+    # so chsh would refuse it.
+    ZSH_BIN=/bin/zsh
+    ;;
+esac
 
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   # RUNZSH=no/CHSH=no: this script handles the shell switch itself.
@@ -25,10 +38,18 @@ else
   echo "oh-my-zsh already installed at ~/.oh-my-zsh, skipping."
 fi
 
-CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)"
+case "$DOTFILES_OS" in
+  debian) CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7)" ;;
+  macos)  CURRENT_SHELL="$(dscl . -read "/Users/$USER" UserShell | awk '{print $2}')" ;;
+esac
+
 if [ "$CURRENT_SHELL" != "$ZSH_BIN" ]; then
   if grep -qx "$ZSH_BIN" /etc/shells; then
-    sudo chsh -s "$ZSH_BIN" "$USER"
+    case "$DOTFILES_OS" in
+      debian) sudo chsh -s "$ZSH_BIN" "$USER" ;;
+      # No sudo: macOS's chsh prompts for the user's own password instead.
+      macos)  chsh -s "$ZSH_BIN" ;;
+    esac
   else
     echo "warning: $ZSH_BIN not listed in /etc/shells; add it, then re-run this script." >&2
     exit 1

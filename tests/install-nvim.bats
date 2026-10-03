@@ -84,3 +84,12 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$("$HOME/.local/bin/tree-sitter" --version)" == "tree-sitter 0.27.0" ]]
 }
+
+@test "macos brew-installs neovim and the tree-sitter CLI, nothing from GitHub" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-nvim"
+  [ "$status" -eq 0 ]
+  grep -q "brew install neovim tree-sitter-cli" "$MOCK_LOG"
+  ! grep -q "curl" "$MOCK_LOG"
+  ! grep -q "apt-get" "$MOCK_LOG"
+  [ ! -e "$HOME/.local/bin/nvim" ]
+}

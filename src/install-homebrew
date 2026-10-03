@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Installs Homebrew, which every other macOS step installs through. Run by
+# bootstrap on macOS only; refuses to run on Linux.
+# Safe to re-run: skips itself if brew already exists at either standard prefix.
+#
+# The official installer also installs the Xcode Command Line Tools (the
+# compiler ruby-build needs) and prompts for the sudo password once.
+#
+# Manual steps:
+#   1. NONINTERACTIVE=1 bash -c "$(curl -fsSL <INSTALLER_URL>)"
+#
+# Fetches: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+source "$DOTFILES_DIR/src/lib/platform.bash"
+
+resolve_os
+if [ "$DOTFILES_OS" != macos ]; then
+  echo "install-homebrew: Homebrew is only used on macOS; $DOTFILES_OS installs with apt." >&2
+  exit 1
+fi
+
+INSTALLER_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+
+if brew="$(find_brew)"; then
+  echo "Homebrew already installed at $brew, skipping."
+  exit 0
+fi
+
+# Fetched into a variable first so a failed download stops the script instead
+# of handing bash an empty program that exits 0.
+installer="$(curl -fsSL "$INSTALLER_URL")"
+NONINTERACTIVE=1 bash -c "$installer"
+
+brew="$(find_brew)" || {
+  echo "The installer finished, but there's no brew at /opt/homebrew or /usr/local; check its output above." >&2
+  exit 1
+}
+echo "✅ Homebrew installed at $brew."

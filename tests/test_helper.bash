@@ -3,6 +3,10 @@
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# The suite tests the Linux path unless a test says otherwise, so running it
+# on a Mac doesn't silently flip every script onto its brew branch.
+export DOTFILES_OS=debian
+
 # A throwaway $HOME per test, so scripts that write dotfiles never touch the real
 # one. $BATS_TEST_TMPDIR is created fresh before each test and deleted after.
 # Cleared rather than just created, so a test that calls this twice really does
@@ -25,6 +29,10 @@ use_mocks() {
   export PATH="$MOCK_BIN_DIR:$MOCKS_DIR:$PATH"
   export MOCK_LOG="$BATS_TEST_TMPDIR/mock.log"
   : > "$MOCK_LOG"
+  # Where the brew mock records casks it has "installed", so a later
+  # `brew list --cask` answers the way the real one would.
+  export MOCK_BREW_CASKS="$BATS_TEST_TMPDIR/brew-casks"
+  mkdir -p "$MOCK_BREW_CASKS"
 }
 
 # A throwaway repo root whose config/, scripts/ and src/ point back at the real

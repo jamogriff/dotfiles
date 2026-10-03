@@ -4,16 +4,18 @@ This repo is a highly curated collection of config files and installation script
 It includes an aesthetic font (IBM Plex Mono), zsh, a terminal (kitty), NeoVim with plugins and LSPs, and version managers for Node (nvm), Python (uv) and Ruby (rbenv). 
 Additionally, Node 24 and Python 3.14 are installed and ready to go after running the `bootstrap` script.
 
-**Note:** This was designed for use on Debian/Ubuntu/PopOS machines, so several scripts call `apt-get` to download dependencies.
-It likely could be easily ported to other flavors of Linux/Unix just by replacing the `apt-get` usages with your distro's package manager (and changing the `apt-get` mock in `tests`).
+It runs on Debian/Ubuntu/Pop!_OS (via `apt-get`) and on macOS (via Homebrew, which bootstrap
+installs). The OS is detected from `uname`, never configured — see [macOS](#macos).
+It likely could be ported to other flavors of Linux just by adding a branch to
+`src/lib/platform.bash` and the scripts that install packages (and a mock in `tests`).
 
 ## Get Started
 
 Two profiles, scoped very differently on purpose:
 
 - **Desktop** — a full dev environment: version managers, LSPs, every editor plugin, a GUI
-  terminal.
-- **TTY** — minimal, for servers: zsh and nvim as a plain editor, plus Docker.
+  terminal. The only profile macOS supports.
+- **TTY** — minimal, for Linux servers: zsh and nvim as a plain editor, plus Docker.
 
 On a fresh machine: Copy `.env.example` to `.env` and set `DOTFILES_PROFILE` to `tty` or `desktop` (default) and run `./dotfiles bootstrap`.
 
@@ -22,8 +24,23 @@ Launch `nvim` next. On desktop, `lazy.nvim` installs every plugin and `mason.nvi
 configured language servers — see [Using lazy.nvim and mason.nvim](#using-lazynvim-and-masonnvim).
 On tty you get the editor and its core plugins.
 
-Two things bootstrap deliberately leaves to you: `sudo systemctl enable --now docker` (and a
-re-login for the `docker` group), and installing a Ruby — see [System Prereq's](#system-prereqs).
+Two things bootstrap deliberately leaves to you: starting Docker (`sudo systemctl enable --now
+docker` and a re-login for the `docker` group on Linux, `colima start` on macOS), and installing
+a Ruby — see [System Prereq's](#system-prereqs).
+
+### macOS
+
+Nothing to install first beyond a user with admin rights: `bootstrap` installs Homebrew (which
+pulls in the Xcode Command Line Tools and asks for your password once), then everything else
+through `brew`. Only the `desktop` profile is supported. What differs from Linux:
+
+- The pins in `src/lib/versions.bash` for neovim, tree-sitter, kitty and the font are Linux-only;
+  brew installs whatever is current. nvm, rbenv and uv use the same vendor installers on both.
+- No `xclip` (tmux copies with `pbcopy`) and no PDF viewer (Preview covers it).
+- Docker is the CLI plus [colima](https://github.com/abiosoft/colima) as the daemon, not Docker
+  Desktop. After bootstrap: `colima start`, or `brew services start colima` to start at login.
+- `config/kitty/macos.conf` holds the macOS-only kitty settings (Option as Alt, a Retina font
+  size); `linux.conf` is its Linux twin. `kitty.conf` includes whichever matches `KITTY_OS`.
 
 
 ### Script Layout
@@ -33,36 +50,40 @@ arguments:
 
 ```
 src/
-  install-packages          # apt: xclip tmux curl unzip fzf ripgrep    (desktop)
-  install-software          # apt: zathura zathura-pdf-poppler          (desktop)
+  install-homebrew          # Homebrew (macOS only)
+  install-packages          # xclip tmux curl unzip fzf ripgrep         (desktop)
+  install-software          # zathura zathura-pdf-poppler (Linux only)  (desktop)
   install-zsh               # zsh + oh-my-zsh (vendor defaults) + chsh   (both)
   install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
-  install-kitty             # Kitty terminal + .desktop entries         (desktop)
-  install-fonts             # IBM Plex Mono Nerd Font into ~/.fonts     (desktop)
-  install-nvim              # Neovim AppImage + tree-sitter CLI         (both)
-  install-docker            # Docker Engine + Compose plugin            (both)
+  install-kitty             # Kitty terminal (+ .desktop entries on Linux) (desktop)
+  install-fonts             # IBM Plex Mono Nerd Font                   (desktop)
+  install-nvim              # Neovim + tree-sitter CLI                  (both)
+  install-docker            # Docker Engine (Linux) / CLI + colima (macOS) (both)
   link-config               # symlinks under config/, scripts/ and .env (both)
   lib/
     link.bash               # link_config / link_zsh_custom / link_bin  (sourced only)
+    platform.bash           # resolve_os, ensure_brew_on_path, pkg_install (sourced only)
     profile.bash            # resolve + validate DOTFILES_PROFILE       (sourced only)
     versions.bash           # NVIM_VERSION, TREE_SITTER_VERSION, FONT_VERSION,
                              # KITTY_VERSION, NODE_VERSION, PYTHON_VERSION, installer pins (sourced only)
 ```
 
-`./dotfiles <script-name>` runs one of them; `./dotfiles bootstrap` runs the sequence for this
-machine's profile:
+Each script branches on `$DOTFILES_OS` (`debian` or `macos`, from `uname`) where the two OSes
+differ. `./dotfiles <script-name>` runs one of them; `./dotfiles bootstrap` runs the sequence
+for this machine's OS and profile:
 
-| Order | desktop | tty |
-|---|---|---|
-| 1 | `install-packages` | — |
-| 2 | `install-software` | — |
-| 3 | `install-zsh` | `install-zsh` |
-| 4 | `install-version-managers` | — |
-| 5 | `install-kitty` | — |
-| 6 | `install-fonts` | — |
-| 7 | `install-nvim` | `install-nvim` |
-| 8 | `install-docker` | `install-docker` |
-| 9 | `link-config` | `link-config` |
+| Order | debian desktop | debian tty | macos desktop |
+|---|---|---|---|
+| 0 | — | — | `install-homebrew` |
+| 1 | `install-packages` | — | `install-packages` |
+| 2 | `install-software` | — | `install-software` |
+| 3 | `install-zsh` | `install-zsh` | `install-zsh` |
+| 4 | `install-version-managers` | — | `install-version-managers` |
+| 5 | `install-kitty` | — | `install-kitty` |
+| 6 | `install-fonts` | — | `install-fonts` |
+| 7 | `install-nvim` | `install-nvim` | `install-nvim` |
+| 8 | `install-docker` | `install-docker` | `install-docker` |
+| 9 | `link-config` | `link-config` | `link-config` |
 
 
 ### The `config/` directory
@@ -100,9 +121,9 @@ fails if an entry is in neither.
 
 `scripts/` (`~/.local/bin/<name>`) deliberately stays outside `config/`. Fonts aren't in the repo
 at all: `src/install-fonts` downloads the pinned
-[nerd-fonts](https://github.com/ryanoasis/nerd-fonts) release into `~/.fonts` during
-`bootstrap` on desktop, so `config/kitty/kitty.conf` has a `BlexMono Nerd Font Mono` to match
-against.
+[nerd-fonts](https://github.com/ryanoasis/nerd-fonts) release into `~/.fonts` (Linux) or installs
+the brew cask (macOS) during `bootstrap` on desktop, so `config/kitty/kitty.conf` has a `BlexMono
+Nerd Font Mono` to match against.
 
 ### Re-linking config
 
@@ -118,7 +139,7 @@ a symlink doesn't exist yet and only a re-run creates it:
 ### Machine-specific env vars: `.env`
 
 `.env` at the repo root holds `DOTFILES_PROFILE` and machine-specific values like
-`INTELEPHENSE_LICENSE`. It's git-ignored; `.env.example` is the committed template. Every line
+`INTELEPHENSE_LICENSE` (and, only for forcing a branch, the optional `DOTFILES_OS` override). It's git-ignored; `.env.example` is the committed template. Every line
 needs `export` — nvim reads these from its environment, and a bare assignment sourced by
 `config/zsh/custom.zsh` is a shell variable, not an exported one.
 
@@ -133,12 +154,13 @@ it on every shell start.
 
 ## System Prereq's
 
-`src/install-packages` apt-installs a small set of OS-level packages (tmux, fzf, ripgrep, etc.) on
+`src/install-packages` installs a small set of OS-level packages (tmux, fzf, ripgrep, etc.) on
 desktop. TTY goes without them: `install-nvim` apt-installs `curl` itself if it has to, and
 `live_grep` just isn't available there.
 
-`src/install-software` is the desktop-only counterpart for end-user applications (Zathura) rather
-than CLI substrate — a new application goes there, a new CLI tool goes in `install-packages`.
+`src/install-software` is the desktop-only counterpart for end-user applications (Zathura, Linux
+only) rather than CLI substrate — a new application goes there, a new CLI tool goes in
+`install-packages`.
 
 `src/install-version-managers` is desktop-only and installs
 [nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby) and
@@ -153,9 +175,9 @@ Afterwards, use the version managers directly (`nvm install 26 && nvm alias defa
 install 3.15`) — there's no `dotfiles` command for it. Bumping the pins only changes what the
 *next* fresh machine gets.
 
-`src/install-docker` runs on both profiles and installs Docker Engine and the Compose plugin from
-Docker's own apt repository (rather than the `get.docker.com` convenience script, so it's pinnable
-and re-runnable). Pop!_OS reports its own codename, so the repo line is built from
+`src/install-docker` runs on both profiles. On Linux it installs Docker Engine and the Compose
+plugin from Docker's own apt repository (rather than the `get.docker.com` convenience script, so
+it's pinnable and re-runnable). Pop!_OS reports its own codename, so the repo line is built from
 `UBUNTU_CODENAME` in `/etc/os-release`. Two manual steps afterwards, deliberately not automated —
 whether the daemon runs at boot is a per-machine decision:
 
@@ -164,6 +186,13 @@ sudo systemctl enable --now docker
 ```
 
 ...then log out and back in so the `docker` group membership applies.
+
+On macOS it brew-installs the docker CLI, the compose and buildx plugins (registered in
+`~/.docker/config.json` via `cliPluginsExtraDirs`) and colima as the daemon. Afterwards:
+
+```
+colima start
+```
 
 Language servers are installed by `mason.nvim` (see `ensure_installed` in
 `config/nvim/lua/user/plugins.lua`), but that block and `nvim-lspconfig` only load on desktop —
@@ -211,14 +240,6 @@ manager has active — it just needs *some* working runtime per language on `$PA
 
 `intelephense` is installed automatically by mason — you just need to set `INTELEPHENSE_LICENSE`
 in the repo's `.env` file, see [Machine-specific env vars](#machine-specific-env-vars-env).
-
-## TODO
-- Investigate a Ruby-version-manager-agnostic way to smoke-test that `ruby-lsp`'s gem install
-  actually succeeds on a fresh machine (it depends on a system Ruby/gem being present).
-- No SQL LSP is enabled: mason's `sqlls` (`sql-language-server@1.7.1`, the latest release) crashes
-  on startup with `ERR_PACKAGE_PATH_NOT_EXPORTED`, a bug in its own
-  `vscode-languageserver-protocol` dependency. Revisit once upstream publishes a fix, or try the
-  Go-based `sqls` instead (needs a Go toolchain, which this repo doesn't set up).
 
 ## Misc
 - I switch Escape and Caps Lock keys. On GNOME you would run the following to do this programatically, but not currently using GNOME so not including it here: `gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"`

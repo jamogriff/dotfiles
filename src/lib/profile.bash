@@ -3,6 +3,8 @@
 # Sourced by the dispatcher and by src/link-config; not runnable on its own.
 # Expects the caller to have set $DOTFILES_DIR to the repo root.
 
+source "$(dirname "${BASH_SOURCE[0]}")/platform.bash"
+
 # Resolve and export DOTFILES_PROFILE, or fail explaining what's missing.
 #
 # An already-exported value wins over .env so a one-shot override works:
@@ -26,4 +28,11 @@ resolve_profile() {
       return 1
       ;;
   esac
+
+  # tty is for headless Linux servers; a Mac is always a desktop.
+  resolve_os
+  if [ "$DOTFILES_OS" = macos ] && [ "$DOTFILES_PROFILE" = tty ]; then
+    echo "DOTFILES_PROFILE is 'tty', which isn't supported on macOS; set it to 'desktop'." >&2
+    return 1
+  fi
 }

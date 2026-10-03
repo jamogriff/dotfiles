@@ -6,7 +6,9 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    items=`find ~/ -maxdepth 3 -mindepth 1 -type d`
+    # Pruned: dot directories (caches, plugin trees) and ~/Library on macOS,
+    # which is slow to walk and trips the Desktop/Documents privacy prompts.
+    items=`find ~ -maxdepth 3 -mindepth 1 \( -path ~/Library -o -name '.*' \) -prune -o -type d -print`
     # items+=`echo -e "\n~/"`
     selected=`echo "$items" | fzf`
 fi

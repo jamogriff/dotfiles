@@ -62,3 +62,19 @@ setup() {
   [[ "$output" == *"already installed at ~/.oh-my-zsh, skipping."* ]]
   [ "$(cat "$HOME/.zshrc")" = "$before" ]
 }
+
+@test "macos uses the preinstalled /bin/zsh and never reaches apt or sudo" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-zsh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Default shell is already /bin/zsh, skipping."* ]]
+  ! grep -q "apt-get" "$MOCK_LOG"
+  ! grep -q "sudo" "$MOCK_LOG"
+  ! grep -q "brew" "$MOCK_LOG"
+}
+
+@test "macos still installs oh-my-zsh" {
+  DOTFILES_OS=macos run bash "$REPO_DIR/src/install-zsh"
+  [ "$status" -eq 0 ]
+  grep -q "ohmyzsh" "$MOCK_LOG"
+  [ -d "$HOME/.oh-my-zsh" ]
+}
