@@ -1,245 +1,109 @@
-# $HOME sweet $HOME (inspired by Jess Archer) 
+# $HOME sweet $HOME
 
-This repo is a highly curated collection of config files and installation scripts that reliably setup a functioning development machine or server in less than a minute.
-It includes an aesthetic font (IBM Plex Mono), zsh, a terminal (kitty), NeoVim with plugins and LSPs, and version managers for Node (nvm), Python (uv) and Ruby (rbenv). 
-Additionally, Node 24 and Python 3.14 are installed and ready to go after running the `bootstrap` script.
+A curated set of config files and install scripts for turning a fresh machine into a place you
+actually want to work. One command gets you oh-my-zsh, the kitty terminal with aesthetic font, tmux,
+curated Neovim with language servers, and nvm, uv and rbenv with
+Node 24 and Python 3.14 already installed. Minutes later you're writing code, not configuring.
 
-It runs on Debian/Ubuntu/Pop!_OS (via `apt-get`) and on macOS (via Homebrew, which bootstrap
-installs). The OS is detected from `uname`, never configured — see [macOS](#macos).
-It likely could be ported to other flavors of Linux just by adding a branch to
-`src/lib/platform.bash` and the scripts that install packages (and a mock in `tests`).
+It runs on Debian, Ubuntu and PopOS through `apt-get`, and on macOS through Homebrew, which
+bootstrap installs for you. The OS is detected from `uname`, so there's nothing to tell it.
 
-## Get Started
+## Get started
 
-Two profiles, scoped very differently on purpose:
+There are two profiles, and they're scoped very differently on purpose:
 
-- **Desktop** — a full dev environment: version managers, LSPs, every editor plugin, a GUI
-  terminal. The only profile macOS supports.
-- **TTY** — minimal, for Linux servers: zsh and nvim as a plain editor, plus Docker.
+- **desktop** is the full dev environment: version managers, language servers, every editor
+  plugin and a GUI terminal. It's the only profile macOS supports.
+- **tty** is the minimal cut for Linux servers: zsh, nvim as a plain editor, and Docker. Nothing
+  that needs a display or a language runtime.
 
-On a fresh machine: Copy `.env.example` to `.env` and set `DOTFILES_PROFILE` to `tty` or `desktop` (default) and run `./dotfiles bootstrap`.
-
-Assuming all goes well, you can restart your machine and it will drop you into zsh (oh my zsh!).
-Launch `nvim` next. On desktop, `lazy.nvim` installs every plugin and `mason.nvim` installs the
-configured language servers — see [Using lazy.nvim and mason.nvim](#using-lazynvim-and-masonnvim).
-On tty you get the editor and its core plugins.
-
-Two things bootstrap deliberately leaves to you: starting Docker (`sudo systemctl enable --now
-docker` and a re-login for the `docker` group on Linux, `colima start` on macOS), and installing
-a Ruby — see [System Prereq's](#system-prereqs).
-
-### macOS
-
-Nothing to install first beyond a user with admin rights: `bootstrap` installs Homebrew (which
-pulls in the Xcode Command Line Tools and asks for your password once), then everything else
-through `brew`. Only the `desktop` profile is supported. What differs from Linux:
-
-- The pins in `src/lib/versions.bash` for neovim, tree-sitter, kitty and the font are Linux-only;
-  brew installs whatever is current. nvm, rbenv and uv use the same vendor installers on both.
-- No `xclip` (tmux copies with `pbcopy`) and no PDF viewer (Preview covers it).
-- Docker is the CLI plus [colima](https://github.com/abiosoft/colima) as the daemon, not Docker
-  Desktop. After bootstrap: `colima start`, or `brew services start colima` to start at login.
-- `config/kitty/macos.conf` holds the macOS-only kitty settings (Option as Alt, a Retina font
-  size); `linux.conf` is its Linux twin. `kitty.conf` includes whichever matches `KITTY_OS`.
-
-
-### Script Layout
-
-Everything lives in `src/`, one file per thing it does, each runnable on its own with no
-arguments:
+On a fresh machine, pick one and go:
 
 ```
-src/
-  install-homebrew          # Homebrew (macOS only)
-  install-packages          # xclip tmux curl unzip fzf ripgrep         (desktop)
-  install-software          # zathura zathura-pdf-poppler (Linux only)  (desktop)
-  install-zsh               # zsh + oh-my-zsh (vendor defaults) + chsh   (both)
-  install-version-managers  # nvm(+Node), rbenv, uv(+Python)            (desktop)
-  install-kitty             # Kitty terminal (+ .desktop entries on Linux) (desktop)
-  install-fonts             # IBM Plex Mono Nerd Font                   (desktop)
-  install-nvim              # Neovim + tree-sitter CLI                  (both)
-  install-docker            # Docker Engine (Linux) / CLI + colima (macOS) (both)
-  link-config               # symlinks under config/, scripts/ and .env (both)
-  lib/
-    link.bash               # link_config / link_zsh_custom / link_bin  (sourced only)
-    platform.bash           # resolve_os, ensure_brew_on_path, pkg_install (sourced only)
-    profile.bash            # resolve + validate DOTFILES_PROFILE       (sourced only)
-    versions.bash           # NVIM_VERSION, TREE_SITTER_VERSION, FONT_VERSION,
-                             # KITTY_VERSION, NODE_VERSION, PYTHON_VERSION, installer pins (sourced only)
+cp .env.example .env    # set DOTFILES_PROFILE to desktop or tty
+./dotfiles bootstrap
 ```
 
-Each script branches on `$DOTFILES_OS` (`debian` or `macos`, from `uname`) where the two OSes
-differ. `./dotfiles <script-name>` runs one of them; `./dotfiles bootstrap` runs the sequence
-for this machine's OS and profile:
+Log out and back in and you'll land in zsh. Launch `nvim` next: on desktop, lazy.nvim fetches
+the plugins and mason installs the language servers on that first run.
+Bootstrap deliberately leaves three things in your hands, because they're per-machine decisions:
 
-| Order | debian desktop | debian tty | macos desktop |
-|---|---|---|---|
-| 0 | — | — | `install-homebrew` |
-| 1 | `install-packages` | — | `install-packages` |
-| 2 | `install-software` | — | `install-software` |
-| 3 | `install-zsh` | `install-zsh` | `install-zsh` |
-| 4 | `install-version-managers` | — | `install-version-managers` |
-| 5 | `install-kitty` | — | `install-kitty` |
-| 6 | `install-fonts` | — | `install-fonts` |
-| 7 | `install-nvim` | `install-nvim` | `install-nvim` |
-| 8 | `install-docker` | `install-docker` | `install-docker` |
-| 9 | `link-config` | `link-config` | `link-config` |
+- **Start Docker when you want it.** On Linux, `sudo systemctl enable --now docker`, then log out
+  and back in so the `docker` group applies. On macOS, `colima start`, or
+  `brew services start colima` if you'd like it running at login.
+- **Install a Ruby** before launching `nvim` for the first time, otherwise mason's install of
+  `ruby-lsp` fails and you'll be running `:MasonInstall ruby-lsp` by hand later:
+  `rbenv install 3.4.1 && rbenv global 3.4.1`. From here on, versions are the managers'
+  business (`nvm install 26`, `uv python install 3.15`); there's no `dotfiles` command for it.
+- **Add your `INTELEPHENSE_LICENSE`** to `.env` if you have one. Without it, intelephense runs
+  unlicensed, which is still perfectly usable.
 
+Everything is safe to re-run. `./dotfiles bootstrap` on an already-provisioned machine is a
+no-op, and `./dotfiles <script-name>` re-runs a single step when you only need the one.
 
-### The `config/` directory
+### A note for Mac users
 
-Everything this repo symlinks into place lives under `config/`, and where each entry lands is
-decided by its shape rather than a per-file list:
+Nothing to install first beyond an account with admin rights. The Homebrew installer pulls in
+the Xcode Command Line Tools along the way and asks for your password once. A few things work
+differently from Linux, all by design: brew installs whatever neovim, kitty and the font are
+current, so only the nvm, uv, Node and Python pins in `src/lib/versions.bash` apply; Docker is
+the CLI plus [colima](https://github.com/abiosoft/colima) rather than Docker Desktop; tmux
+copies with `pbcopy` instead of `xclip`; and there's no PDF viewer installed, because Preview
+is right there.
 
-| Entry | Shape | Symlinked to |
-|---|---|---|
-| `config/nvim/` | directory | `~/.config/nvim` |
-| `config/kitty/` | directory | `~/.config/kitty` (desktop only) |
-| `config/.tmux.conf` | file | `~/.tmux.conf` (desktop only) |
-| `config/.gitconfig` | file | `~/.gitconfig` |
-| `config/.ideavimrc` | file | `~/.ideavimrc` (desktop only) |
-| `config/zsh/` | directory | *(exception — see below)* |
-
-- **A directory** becomes `~/.config/<name>`.
-- **A file** becomes `~/<name>` — an identity mapping with no exceptions, which is why every flat
-  entry keeps its leading dot.
-
-`config/zsh/` is the one real exception: oh-my-zsh sources each `*.zsh` file in `$ZSH_CUSTOM`
-individually, so those get linked file by file rather than as a directory.
-
-`install-zsh` does **not** preserve `~/.zshrc`. It runs the oh-my-zsh installer without
-`KEEP_ZSHRC`, so any existing `~/.zshrc` is renamed to `~/.zshrc.pre-oh-my-zsh` and replaced
-with oh-my-zsh's own default template the next time the installer actually runs (i.e., if
-`~/.oh-my-zsh` doesn't already exist). Anything you want to survive that — theme, plugins,
-aliases, functions, `.env` sourcing — belongs in `config/zsh/custom.zsh`, which is symlinked into
-`$ZSH_CUSTOM` and auto-sourced by oh-my-zsh on every shell start, regardless of what's in
-`~/.zshrc`.
-
-Which *names* each profile gets is the single `case` block at the top of `src/link-config`.
-Adding something to `config/` means adding it to at least one branch; `tests/link-config.bats`
-fails if an entry is in neither.
-
-`scripts/` (`~/.local/bin/<name>`) deliberately stays outside `config/`. Fonts aren't in the repo
-at all: `src/install-fonts` downloads the pinned
-[nerd-fonts](https://github.com/ryanoasis/nerd-fonts) release into `~/.fonts` (Linux) or installs
-the brew cask (macOS) during `bootstrap` on desktop, so `config/kitty/kitty.conf` has a `BlexMono
-Nerd Font Mono` to match against.
-
-### Re-linking config
-
-Editing a symlinked file takes effect immediately. `./dotfiles link-config` is for the cases where
-a symlink doesn't exist yet and only a re-run creates it:
-
-- **A new file was added** under `config/`.
-- **A source path changed** — existing symlinks point at the old path.
-- **A conditional target finally exists** — `.env` is the example: absent at bootstrap, it just
-  warns.
-- **Drift or accidental damage** — something overwrote a symlink with a real file.
-
-### Machine-specific env vars: `.env`
-
-`.env` at the repo root holds `DOTFILES_PROFILE` and machine-specific values like
-`INTELEPHENSE_LICENSE` (and, only for forcing a branch, the optional `DOTFILES_OS` override). It's git-ignored; `.env.example` is the committed template. Every line
-needs `export` — nvim reads these from its environment, and a bare assignment sourced by
-`config/zsh/custom.zsh` is a shell variable, not an exported one.
+## How it's laid out
 
 ```
-cp .env.example .env
-$EDITOR .env
-./dotfiles link-config
+dotfiles                    # dispatcher: `bootstrap`, or one step by name
+src/install-*               # one script per step; each branches on Linux vs macOS
+src/link-config             # symlinks config/, scripts/ and .env into $HOME
+src/lib/                    # sourced helpers: OS detection, profile, link rules, version pins
+config/                     # everything that gets symlinked
+scripts/                    # ~/.local/bin extras (the `t` tmux session picker)
+tests/                      # bats suite; mocks keep it off the network and package managers
 ```
 
-`src/link-config` symlinks it to `~/.env` on both profiles, and `config/zsh/custom.zsh` sources
-it on every shell start.
+Which steps run, and in what order, lives in the `bootstrap` function in `dotfiles`, with a
+comment on why the order matters. Every step is a plain bash script that also runs on its own
+with no arguments, and each one opens with a header comment spelling out the manual equivalent,
+so if you'd rather do a step by hand, the recipe is right there.
 
-## System Prereq's
+### Where `config/` ends up
 
-`src/install-packages` installs a small set of OS-level packages (tmux, fzf, ripgrep, etc.) on
-desktop. TTY goes without them: `install-nvim` apt-installs `curl` itself if it has to, and
-`live_grep` just isn't available there.
+The rule is simple enough to keep in your head:
 
-`src/install-software` is the desktop-only counterpart for end-user applications (Zathura, Linux
-only) rather than CLI substrate — a new application goes there, a new CLI tool goes in
-`install-packages`.
+- **A directory** becomes `~/.config/<name>`: `nvim`, `kitty`.
+- **A file** becomes `~/<name>`: `.gitconfig`, `.tmux.conf`, `.ideavimrc`. It's an identity
+  mapping with no exceptions, which is why every flat entry keeps its leading dot.
+- **`config/zsh/*.zsh`** is the one special case. oh-my-zsh sources individual files from
+  `$ZSH_CUSTOM`, so these are linked one by one. `~/.zshrc` itself belongs to the oh-my-zsh
+  installer and is disposable; anything you want to keep goes in `config/zsh/custom.zsh`.
+- **`.env`** is linked to `~/.env` and sourced on every shell start. It's git-ignored, with
+  `.env.example` as the committed template. Every line needs `export`, because nvim reads
+  these from its environment rather than from the shell.
 
-`src/install-version-managers` is desktop-only and installs
-[nvm](https://github.com/nvm-sh/nvm) (Node), [rbenv](https://rbenv.org) (Ruby) and
-[uv](https://docs.astral.sh/uv) (Python), plus the build dependencies `ruby-build` needs, a pinned
-Node, and Python 3.14 set as the global default so `python3` just works. It does **not** build a
-Ruby. Mason needs a Ruby on `$PATH` for `ruby-lsp`, so run `rbenv install <version> && rbenv global
-<version>` *before* launching `nvim` for the first time. Otherwise mason's first-run
-`ensure_installed` pass fails for that server and you'll need to `:MasonInstall ruby-lsp` by hand
-afterwards. No PHP is installed on the host; `intelephense` runs on Node.
+The list of which names each profile gets is the `case` block at the top of
+`src/link-config`, and `tests/link-config.bats` will fail the moment a `config/` entry is in
+neither list, so nothing gets forgotten. Since everything is a symlink, editing a file takes
+effect immediately. You only need `./dotfiles link-config` again after adding a new file,
+moving one, or accidentally overwriting a link with a real file.
 
-Afterwards, use the version managers directly (`nvm install 26 && nvm alias default 26`, `uv python
-install 3.15`) — there's no `dotfiles` command for it. Bumping the pins only changes what the
-*next* fresh machine gets.
+## Cheatsheets
 
-`src/install-docker` runs on both profiles. On Linux it installs Docker Engine and the Compose
-plugin from Docker's own apt repository (rather than the `get.docker.com` convenience script, so
-it's pinnable and re-runnable). Pop!_OS reports its own codename, so the repo line is built from
-`UBUNTU_CODENAME` in `/etc/os-release`. Two manual steps afterwards, deliberately not automated —
-whether the daemon runs at boot is a per-machine decision:
+Once you're set up, these are the two you'll keep coming back to:
 
-```
-sudo systemctl enable --now docker
-```
+- [Neovim](neovim-cheatsheet.md): every keybinding, plus how to work with lazy.nvim and
+  mason.nvim when you want to add a plugin or a language server.
+- [tmux](tmux-cheatsheet.md): the keybindings and the `t` session picker that ties them
+  together.
 
-...then log out and back in so the `docker` group membership applies.
-
-On macOS it brew-installs the docker CLI, the compose and buildx plugins (registered in
-`~/.docker/config.json` via `cliPluginsExtraDirs`) and colima as the daemon. Afterwards:
+## Tests
 
 ```
-colima start
+bats tests
 ```
 
-Language servers are installed by `mason.nvim` (see `ensure_installed` in
-`config/nvim/lua/user/plugins.lua`), but that block and `nvim-lspconfig` only load on desktop —
-`profile.is_tty()` gates them.
-
-## Using lazy.nvim and mason.nvim
-
-Plugins are managed by [lazy.nvim](https://lazy.folke.io), configured in
-`config/nvim/lua/user/plugins.lua` and bootstrapped by `lazy.lua`. Language servers are managed by
-[mason.nvim](https://mason-registry.dev) via the `ensure_installed` list on the
-`mason-lspconfig.nvim` entry in that same file.
-
-### lazy.nvim
-
-- `:Lazy` — open the plugin manager UI.
-- `:Lazy update` — update every plugin to the latest matching its pin. Everything defaults to
-  `version = "*"` (latest stable semver tag) via `defaults.version` in `lazy.lua`.
-- `:Lazy sync` — install + clean + update; run this after editing `plugins.lua`.
-- `:Lazy restore` — reset every plugin to the commit in `config/nvim/lazy-lock.json`.
-- `:Lazy check` — check for updates without installing.
-- `:checkhealth lazy` — sanity-check the install; also flags leftovers from a previous plugin
-  manager.
-
-To add a plugin: add an entry in `plugins.lua` (desktop-only ones go in the
-`if not profile.is_tty() then ... end` block) and run `:Lazy sync`.
-
-### mason.nvim
-
-- `:Mason` — browse/install/uninstall servers by hand.
-- `:MasonInstall <name>` / `:MasonUninstall <name>` — ad hoc, without touching `ensure_installed`.
-- `:MasonUpdate` — refresh the package registry index.
-- `:MasonLog` — logs for a server that's failing.
-
-To add a language server permanently, add its **lspconfig server name** — not the mason package
-name, they sometimes differ (mason's `html-lsp` is lspconfig's `html`; see
-https://mason-registry.dev/registry/list) — to `ensure_installed`, then either:
-- add the same name to `vim.lsp.enable({...})` in `config/nvim/lua/user/plugins/lspconfig.lua`, or
-- if it needs custom settings (like `intelephense`'s license key), call `vim.lsp.config('name',
-  { ... })` first, then `vim.lsp.enable('name')`.
-
-Mason installs into `~/.local/share/nvim/mason`, independent of whichever version your own version
-manager has active — it just needs *some* working runtime per language on `$PATH` at install time.
-
-## PHP Stuff
-
-`intelephense` is installed automatically by mason — you just need to set `INTELEPHENSE_LICENSE`
-in the repo's `.env` file, see [Machine-specific env vars](#machine-specific-env-vars-env).
-
-## Misc
-- I switch Escape and Caps Lock keys. On GNOME you would run the following to do this programatically, but not currently using GNOME so not including it here: `gsettings set org.gnome.desktop.input-sources xkb-options "['caps:swapescape']"`
+The scripts run for real against a throwaway `$HOME`, with `apt-get`, `brew`, `curl` and the
+rest replaced by the stand-ins in `tests/mocks/`, so the suite never touches the network or a
+package manager. It exercises the Linux path by default and the macOS path wherever a test sets
+`DOTFILES_OS=macos`, which means you can run it on either OS and trust the result.
